@@ -52,6 +52,8 @@ management:
 app:
   base-url: ${APP_BASE_URL:http://localhost:8080}
   account-gate-enabled: ${APP_ACCOUNT_GATE_ENABLED:true}
+  subscriptions:
+    enabled: ${APP_SUBSCRIPTIONS_ENABLED:true}
   timezone: Europe/Moscow
   storage-path: ${APP_STORAGE_PATH:./uploads}
   websocket:

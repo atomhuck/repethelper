@@ -32,6 +32,8 @@ public class LessonSeries {
 
     @Column(name = "base_price_rubles")
     private Integer basePriceRubles;
+    @Column(name = "use_subscription_by_default", nullable = false)
+    private boolean useSubscriptionByDefault;
 
     @Column(name = "cancelled_from_index")
     private Integer cancelledFromIndex;
@@ -72,6 +74,8 @@ public class LessonSeries {
     public Instant getAnchorStartAt() { return anchorStartAt; }
     public int getDurationMinutes() { return durationMinutes; }
     public Integer getBasePriceRubles() { return basePriceRubles; }
+    public boolean isUseSubscriptionByDefault() { return useSubscriptionByDefault; }
+    public void setUseSubscriptionByDefault(boolean value) { this.useSubscriptionByDefault = value; this.updatedAt = Instant.now(); }
     public Integer getCancelledFromIndex() { return cancelledFromIndex; }
     public Instant occurrenceStart(int index) { return anchorStartAt.plus(Duration.ofDays(7L * index)); }
     public boolean includes(int index) {

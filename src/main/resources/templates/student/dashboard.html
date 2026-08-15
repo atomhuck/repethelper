@@ -17,6 +17,18 @@
         <aside class="panel side-panel"><div class="panel-heading"><div><p class="eyebrow">На очереди</p><h2>Ближайшие</h2></div></div><div th:if="${upcoming.empty}" class="empty compact"><p>Пока занятий нет</p></div><a th:each="lesson : ${upcomingPreview}" th:href="@{/lessons/{id}(id=${lesson.id})}" class="upcoming-item"><div class="date-chip"><strong th:text="${@timeView.day(lesson.startAt)}">24</strong><small th:text="${@timeView.monthShort(lesson.startAt)}">июл</small></div><div><b th:text="${lesson.teacher.displayName}">Преподаватель</b><span th:text="${@timeView.dateTime(lesson.startAt) + ' · ' + lesson.durationMinutes + ' мин'}"></span></div><svg class="arrow ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#arrow-right}"></use></svg></a><a th:if="${upcoming.size() > 4}" class="button secondary upcoming-more" th:href="@{/student/upcoming}">Посмотреть все занятия</a></aside>
     </section>
 
+    <section th:if="${!subscriptionSummaries.empty}" class="panel student-subscriptions">
+        <div class="panel-heading"><div><p class="eyebrow">Предоплаченные занятия</p><h2>Мои абонементы</h2></div></div>
+        <div class="student-subscription-list">
+            <article th:each="item : ${subscriptionSummaries}" class="student-subscription-row">
+                <span class="avatar violet" th:text="${#strings.substring(item.teacher.displayName,0,1)}">П</span>
+                <div><b th:text="${item.teacher.displayName}">Преподаватель</b><small th:text="${'Доступно ' + item.summary.available + ' · запланировано ' + item.summary.planned}">Доступно 4 · запланировано 3</small></div>
+                <span class="subscription-count" th:text="${item.summary.available}">4</span>
+            </article>
+        </div>
+        <small class="privacy-note">Стоимость и внутренние финансовые операции видны только преподавателю.</small>
+    </section>
+
     <section id="history" th:if="${accepted}" class="panel section-panel history-panel"><div class="panel-heading"><div><p class="eyebrow">Архив</p><h2>Прошедшие и отменённые</h2></div></div><div th:if="${history.empty}" class="empty compact"><p>История пока пуста</p></div><a th:each="lesson : ${history}" th:href="@{/lessons/{id}(id=${lesson.id})}" class="history-row"><span class="status-dot" th:classappend="${lesson.status.name() == 'CANCELLED'} ? 'cancelled'"></span><div><b th:text="${lesson.status.name() == 'CANCELLED' ? 'Отменённое занятие' : lesson.teacher.displayName}"></b><small th:text="${@timeView.dateTime(lesson.startAt) + ' · ' + lesson.teacher.displayName}"></small></div><span th:if="${lesson.homeworkText != null}" class="tag">есть домашка</span><svg class="arrow ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#arrow-right}"></use></svg></a></section>
 </main>
 <nav th:replace="~{fragments :: mobileNav(${user}, 'dashboard')}"></nav>

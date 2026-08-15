@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import ru.repethelper.domain.PaymentStatus;
+import ru.repethelper.domain.PaymentSource;
 import ru.repethelper.domain.Role;
 import ru.repethelper.domain.User;
 
@@ -120,7 +121,8 @@ public class FinanceService {
                     select ('L' || l.id)::varchar as row_key, l.id as lesson_id, u.id as student_id,
                            u.display_name as student_name, l.start_at, l.duration_minutes,
                            l.price_rubles as amount_rubles, l.payment_status, false as deleted,
-                           p.id as payment_record_id, l.status as lesson_status
+                           p.id as payment_record_id, l.status as lesson_status,
+                           case when l.subscription_credit_id is null then 'MANUAL' else 'SUBSCRIPTION' end as payment_source
                     from lessons l
                     join app_users u on u.id = l.student_id
                     left join lesson_payment_records p on p.lesson_id = l.id
@@ -129,7 +131,8 @@ public class FinanceService {
                       and l.start_at >= :from and l.start_at < :to
                     union all
                     select ('P' || p.id)::varchar, null::bigint, null::bigint, null::varchar,
-                           p.lesson_start_at, 0, p.amount_rubles, 'PAID'::varchar, true, p.id, 'DELETED'::varchar
+                           p.lesson_start_at, 0, p.amount_rubles, 'PAID'::varchar, true, p.id, 'DELETED'::varchar,
+                           p.payment_source
                     from lesson_payment_records p
                     where p.teacher_id = :teacherId and p.lesson_id is null
                       and p.lesson_start_at >= :from and p.lesson_start_at < :to
@@ -149,7 +152,9 @@ public class FinanceService {
                             rs.getInt("amount_rubles"), PaymentStatus.valueOf(rs.getString("payment_status")),
                             deleted, "CANCELLED".equals(rs.getString("lesson_status")),
                             nullableLong(rs, "payment_record_id"),
-                            !deleted && !start.plus(duration, ChronoUnit.MINUTES).isAfter(clock.instant()));
+                            !deleted && !start.plus(duration, ChronoUnit.MINUTES).isAfter(clock.instant()),
+                            PaymentSource.valueOf(rs.getString("payment_source")),
+                            "SUBSCRIPTION".equals(rs.getString("payment_source")));
                 }).list();
         return new PageResult<>(rows, safePage, safeSize, total);
     }
@@ -240,7 +245,7 @@ public class FinanceService {
     public record FinanceLessonRow(String rowKey, Long lessonId, Long studentId, String studentName,
                                    Instant startAt, int durationMinutes, int amountRubles,
                                    PaymentStatus paymentStatus, boolean deleted, boolean cancelled, Long paymentRecordId,
-                                   boolean completed) {}
+                                   boolean completed, PaymentSource paymentSource, boolean paidBySubscription) {}
 
     public record DebtRow(Long lessonId, Long studentId, String studentName, Instant startAt,
                           int durationMinutes, int amountRubles, long overdueDays) {}

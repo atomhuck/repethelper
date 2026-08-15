@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.UUID;
 
 public interface LessonRepository extends JpaRepository<Lesson, Long> {
-    @EntityGraph(attributePaths = {"student", "teacher"})
+    @EntityGraph(attributePaths = {"student", "teacher", "subscriptionCredit", "subscriptionCredit.subscription"})
     Optional<Lesson> findWithStudentById(Long id);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
@@ -47,6 +47,16 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 
     @EntityGraph(attributePaths = {"student", "teacher"})
     List<Lesson> findByTeacherAndStudentOrderByStartAtAsc(User teacher, User student);
+
+    @Query("select l from Lesson l where l.subscriptionCredit.id = :creditId")
+    Optional<Lesson> findBySubscriptionCreditId(Long creditId);
+
+    @Query("select l from Lesson l where l.subscriptionCredit.subscription.id = :subscriptionId order by l.startAt, l.id")
+    List<Lesson> findBySubscriptionId(Long subscriptionId);
+
+    @EntityGraph(attributePaths = {"subscriptionCredit", "subscriptionCredit.subscription"})
+    @Query("select l from Lesson l where l.subscriptionCredit.subscription.id in :subscriptionIds order by l.startAt, l.id")
+    List<Lesson> findBySubscriptionIds(List<Long> subscriptionIds);
 
     @EntityGraph(attributePaths = {"student", "teacher"})
     List<Lesson> findBySeriesIdAndOccurrenceIndexGreaterThanEqualOrderByOccurrenceIndexAsc(UUID seriesId, int occurrenceIndex);

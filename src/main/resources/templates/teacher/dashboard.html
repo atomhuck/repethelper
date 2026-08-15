@@ -11,12 +11,29 @@
         <details id="new-lesson" class="popover" th:attr="open=${selectedStudentId != null ? 'open' : null}"><summary class="button primary"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#plus}"></use></svg>Назначить занятие</summary>
             <form th:action="@{/teacher/lessons}" th:object="${lessonForm}" method="post" class="panel popover-panel stack-form new-lesson-form">
                 <h3>Новое занятие</h3>
-                <label>Ученик<select id="lesson-student" th:field="*{studentId}" required><option value="">Выберите ученика</option><option th:each="student : ${students}" th:value="${student.id}" th:text="${student.displayName}" th:data-last-price="${latestPrices[student.id]}"></option></select></label>
+                <label>Ученик<select id="lesson-student" th:field="*{studentId}" required><option value="">Выберите ученика</option><option th:each="student : ${students}" th:value="${student.id}" th:text="${student.displayName}" th:data-last-price="${latestPrices[student.id]}" th:data-subscription-available="${subscriptionSummaries[student.id] != null ? subscriptionSummaries[student.id].available : 0}"></option></select></label>
                 <label>Дата и время<input type="datetime-local" th:field="*{startAt}" required></label>
                 <label>Длительность<select th:field="*{durationMinutes}"><option value="45">45 минут</option><option value="60">60 минут</option><option value="90">90 минут</option><option value="120">120 минут</option></select></label>
-                <label>Стоимость занятия
+                <fieldset th:if="${subscriptionEnabled}" class="choice-fieldset payment-mode-fieldset">
+                    <legend>Оплата</legend>
+                    <label class="choice-card payment-mode-card"><input type="radio" th:field="*{paymentMode}" value="SINGLE"><span><b>Обычная оплата</b><small>Цена и отметка оплаты для одного занятия</small></span></label>
+                    <label class="choice-card payment-mode-card" id="use-subscription-choice"><input type="radio" th:field="*{paymentMode}" value="USE_SUBSCRIPTION"><span><b>Использовать абонемент</b><small id="subscription-balance-hint">Сначала выберите ученика</small></span></label>
+                    <label class="choice-card payment-mode-card"><input type="radio" th:field="*{paymentMode}" value="CREATE_SUBSCRIPTION"><span><b>Новый абонемент</b><small>Создать пакет и покрыть ближайшие занятия</small></span></label>
+                </fieldset>
+                <label id="single-price-fields">Стоимость занятия
                     <span class="money-input"><input id="lesson-price" type="number" inputmode="numeric" min="1" max="1000000" step="1" th:field="*{priceRubles}" placeholder="Не указана"><span>₽</span></span>
                     <small id="price-hint">Необязательно · видно только вам</small>
+                </label>
+                <div id="new-subscription-fields" class="subscription-create-fields" hidden>
+                    <div class="subscription-fields-grid">
+                        <label>Количество занятий<input id="subscription-count" type="number" inputmode="numeric" min="1" max="100" th:field="*{subscriptionLessonCount}" placeholder="Например, 8"></label>
+                        <label>Стоимость пакета<span class="money-input"><input id="subscription-total" type="number" inputmode="numeric" min="1" max="100000000" th:field="*{subscriptionTotalRubles}" placeholder="Например, 12 000"><span>₽</span></span></label>
+                    </div>
+                    <div id="subscription-preview" class="subscription-preview">Укажите количество занятий и общую стоимость.</div>
+                </div>
+                <label th:if="${subscriptionEnabled}" id="series-subscription-setting" class="switch-row" hidden>
+                    <input type="checkbox" th:field="*{useSubscriptionForSeries}">
+                    <span><b>Применять абонемент к новым встречам серии</b><small>После окончания баланса новые занятия станут обычными неоплаченными.</small></span>
                 </label>
                 <fieldset class="choice-fieldset">
                     <legend>Повторение</legend>
@@ -81,6 +98,16 @@
         const student = document.getElementById('lesson-student');
         const price = document.getElementById('lesson-price');
         const priceHint = document.getElementById('price-hint');
+        const singleFields = document.getElementById('single-price-fields');
+        const subscriptionFields = document.getElementById('new-subscription-fields');
+        const subscriptionCount = document.getElementById('subscription-count');
+        const subscriptionTotal = document.getElementById('subscription-total');
+        const subscriptionPreview = document.getElementById('subscription-preview');
+        const balanceHint = document.getElementById('subscription-balance-hint');
+        const useSubscriptionChoice = document.getElementById('use-subscription-choice');
+        const seriesSubscriptionSetting = document.getElementById('series-subscription-setting');
+        const paymentModes = [...document.querySelectorAll('input[name="paymentMode"]')];
+        const recurrenceInputs = [...document.querySelectorAll('input[name="recurrence"]')];
         let priceWasEnteredManually = Boolean(price?.value);
         const weekdays = ['воскресеньям', 'понедельникам', 'вторникам', 'средам', 'четвергам', 'пятницам', 'субботам'];
         const updateWeeklyLabel = () => {
@@ -97,8 +124,52 @@
             priceWasEnteredManually = true;
             priceHint.textContent = price.value ? 'Стоимость видна только вам' : 'Необязательно · видно только вам';
         });
+        const currentPaymentMode = () => paymentModes.find(input => input.checked)?.value || 'SINGLE';
+        const updateSubscriptionPreview = () => {
+            if (!subscriptionPreview) return;
+            const count = Number(subscriptionCount?.value || 0);
+            const total = Number(subscriptionTotal?.value || 0);
+            if (!Number.isInteger(count) || count < 1 || count > 100 || !Number.isInteger(total) || total < count) {
+                subscriptionPreview.textContent = 'Укажите от 1 до 100 занятий и общую стоимость не меньше количества занятий.';
+                return;
+            }
+            if (total > count * 1_000_000) {
+                subscriptionPreview.textContent = 'На одно занятие должно приходиться не больше 1 000 000 ₽.';
+                return;
+            }
+            const base = Math.floor(total / count);
+            const remainder = total % count;
+            subscriptionPreview.textContent = remainder
+                ? `${count} занятий · ${remainder} по ${(base + 1).toLocaleString('ru-RU')} ₽ и ${count - remainder} по ${base.toLocaleString('ru-RU')} ₽`
+                : `${count} занятий · по ${base.toLocaleString('ru-RU')} ₽`;
+        };
+        const updatePaymentUi = () => {
+            const mode = currentPaymentMode();
+            if (singleFields) singleFields.hidden = mode !== 'SINGLE';
+            if (subscriptionFields) subscriptionFields.hidden = mode !== 'CREATE_SUBSCRIPTION';
+            if (price) price.disabled = mode !== 'SINGLE';
+            if (subscriptionCount) subscriptionCount.required = mode === 'CREATE_SUBSCRIPTION';
+            if (subscriptionTotal) subscriptionTotal.required = mode === 'CREATE_SUBSCRIPTION';
+            const weekly = recurrenceInputs.some(input => input.checked && input.value === 'WEEKLY');
+            if (seriesSubscriptionSetting) seriesSubscriptionSetting.hidden = mode === 'SINGLE' || !weekly;
+            updateSubscriptionPreview();
+        };
+        paymentModes.forEach(input => input.addEventListener('change', updatePaymentUi));
+        recurrenceInputs.forEach(input => input.addEventListener('change', updatePaymentUi));
+        subscriptionCount?.addEventListener('input', updateSubscriptionPreview);
+        subscriptionTotal?.addEventListener('input', updateSubscriptionPreview);
         student?.addEventListener('change', () => {
             const suggested = student.selectedOptions[0]?.dataset.lastPrice;
+            const available = Number(student.selectedOptions[0]?.dataset.subscriptionAvailable || 0);
+            if (balanceHint) balanceHint.textContent = available > 0
+                ? `Доступно ${available} занятий`
+                : 'Свободных занятий в абонементе нет';
+            const useInput = useSubscriptionChoice?.querySelector('input');
+            if (useInput) {
+                useInput.disabled = available < 1;
+                if (available > 0 && !priceWasEnteredManually && currentPaymentMode() === 'SINGLE') useInput.checked = true;
+                if (available < 1 && useInput.checked) paymentModes.find(input => input.value === 'SINGLE').checked = true;
+            }
             if (!priceWasEnteredManually || !price.value) {
                 price.value = suggested || '';
                 priceWasEnteredManually = false;
@@ -106,8 +177,10 @@
             priceHint.textContent = suggested
                 ? `Последняя стоимость для этого ученика — ${Number(suggested).toLocaleString('ru-RU')} ₽`
                 : 'Для этого ученика предыдущая стоимость не найдена';
+            updatePaymentUi();
         });
         if (student?.value) student.dispatchEvent(new Event('change'));
+        updatePaymentUi();
         const copy = async (selector, fallback) => document.querySelector(selector)?.addEventListener("click", async event => {
             await navigator.clipboard.writeText(event.currentTarget.dataset.value);
             event.currentTarget.textContent = "Скопировано";

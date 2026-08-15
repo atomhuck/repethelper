@@ -17,6 +17,15 @@ public class LessonForm {
     @Max(value = 1_000_000, message = "Максимальная стоимость — 1 000 000 ₽")
     private Integer priceRubles;
     @NotNull
+    private ru.repethelper.domain.LessonPaymentMode paymentMode = ru.repethelper.domain.LessonPaymentMode.SINGLE;
+    @Min(value = 1, message = "В абонементе должно быть хотя бы одно занятие")
+    @Max(value = 100, message = "В абонементе может быть не больше 100 занятий")
+    private Integer subscriptionLessonCount;
+    @Min(value = 1, message = "Укажите стоимость абонемента")
+    @Max(value = 100_000_000, message = "Стоимость абонемента слишком большая")
+    private Integer subscriptionTotalRubles;
+    private boolean useSubscriptionForSeries = true;
+    @NotNull
     private LessonRecurrence recurrence = LessonRecurrence.ONCE;
     @NotNull
     private LessonChangeScope scope = LessonChangeScope.SINGLE;
@@ -28,6 +37,14 @@ public class LessonForm {
     public void setDurationMinutes(int durationMinutes) { this.durationMinutes = durationMinutes; }
     public Integer getPriceRubles() { return priceRubles; }
     public void setPriceRubles(Integer priceRubles) { this.priceRubles = priceRubles; }
+    public ru.repethelper.domain.LessonPaymentMode getPaymentMode() { return paymentMode; }
+    public void setPaymentMode(ru.repethelper.domain.LessonPaymentMode paymentMode) { this.paymentMode = paymentMode; }
+    public Integer getSubscriptionLessonCount() { return subscriptionLessonCount; }
+    public void setSubscriptionLessonCount(Integer subscriptionLessonCount) { this.subscriptionLessonCount = subscriptionLessonCount; }
+    public Integer getSubscriptionTotalRubles() { return subscriptionTotalRubles; }
+    public void setSubscriptionTotalRubles(Integer subscriptionTotalRubles) { this.subscriptionTotalRubles = subscriptionTotalRubles; }
+    public boolean isUseSubscriptionForSeries() { return useSubscriptionForSeries; }
+    public void setUseSubscriptionForSeries(boolean useSubscriptionForSeries) { this.useSubscriptionForSeries = useSubscriptionForSeries; }
     public LessonRecurrence getRecurrence() { return recurrence; }
     public void setRecurrence(LessonRecurrence recurrence) { this.recurrence = recurrence; }
     public LessonChangeScope getScope() { return scope; }

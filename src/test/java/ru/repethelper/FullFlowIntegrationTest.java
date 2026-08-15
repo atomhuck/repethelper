@@ -71,6 +71,8 @@ class FullFlowIntegrationTest {
     @Autowired TeacherStudentOverviewService teacherStudentOverviews;
     @Autowired FinanceService finances;
     @Autowired LessonPaymentRecordRepository paymentRecords;
+    @Autowired LessonSubscriptionService subscriptions;
+    @Autowired LessonSubscriptionRepository subscriptionRepository;
     private MockMvc mvc;
 
     @BeforeEach void setup() { mvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build(); }
@@ -841,6 +843,70 @@ class FullFlowIntegrationTest {
         assertThat(preserved.getLessonId()).isNull();
         assertThat(preserved.getAmountRubles()).isEqualTo(1_500);
         assertThat(finances.monthSummary(teacher, month).received()).isEqualTo(3_500);
+    }
+
+    @Test
+    void subscriptionsReserveReturnAndConsumeCreditsWithoutLeakingPriceToStudent() throws Exception {
+        User teacher = accounts.requireByUsername("teacher");
+        User student = accounts.register("Ученик с абонементом", "subscription_flow_student",
+                "subscription.flow@example.test", "SubscriptionPassword123", Role.STUDENT, true);
+        student.verifyEmail();
+        student = users.save(student);
+        String studentEmail = student.getEmail();
+        connections.send(student, "teacher_code");
+        ConnectionRequest request = requestRepository.findByStudentOrderByCreatedAtDesc(student).getFirst();
+        connections.process(teacher, request.getId(), true);
+
+        LessonSubscription subscription = subscriptions.create(teacher, student.getId(), 6, 10_000);
+        assertThat(subscriptionRepository.findById(subscription.getId())).isPresent();
+        assertThat(subscriptions.summary(teacher, student).available()).isEqualTo(6);
+        assertThat(emailNotifications.findAll()).anyMatch(item ->
+                item.getType() == EmailNotificationType.SUBSCRIPTION_CREATED
+                        && item.getRecipientEmail().equals(studentEmail)
+                        && !item.getPayload().contains("10 000"));
+
+        LocalDateTime future = LocalDateTime.now(ZoneId.of("Europe/Moscow")).plusDays(3).withSecond(0).withNano(0);
+        Lesson covered = lessons.create(teacher, student.getId(), future, 60, LessonRecurrence.ONCE,
+                null, LessonPaymentMode.USE_SUBSCRIPTION, null, null, false);
+        Lesson reloaded = lessonRepository.findWithStudentById(covered.getId()).orElseThrow();
+        assertThat(reloaded.isPaidBySubscription()).isTrue();
+        assertThat(reloaded.getPriceRubles()).isEqualTo(1_667);
+        assertThat(reloaded.getPaymentStatus()).isEqualTo(PaymentStatus.PAID);
+        assertThat(paymentRecords.findByLessonId(covered.getId()).orElseThrow().getPaymentSource())
+                .isEqualTo(PaymentSource.SUBSCRIPTION);
+        assertThat(subscriptions.summary(teacher, student))
+                .extracting(LessonSubscriptionService.PairSummary::available,
+                        LessonSubscriptionService.PairSummary::planned)
+                .containsExactly(5, 1);
+
+        mvc.perform(get("/lessons/{id}", covered.getId())
+                        .with(user(student.getUsername()).roles("STUDENT")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Оплачено абонементом")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("1 667 ₽"))));
+
+        subscriptions.release(teacher, covered.getId());
+        reloaded = lessonRepository.findWithStudentById(covered.getId()).orElseThrow();
+        assertThat(reloaded.isPaidBySubscription()).isFalse();
+        assertThat(reloaded.getPaymentStatus()).isEqualTo(PaymentStatus.UNPAID);
+        assertThat(paymentRecords.findByLessonId(covered.getId())).isEmpty();
+        assertThat(subscriptions.summary(teacher, student).available()).isEqualTo(6);
+
+        Lesson past = lessons.create(teacher, student.getId(),
+                LocalDateTime.now(ZoneId.of("Europe/Moscow")).minusDays(1), 60,
+                LessonRecurrence.ONCE, null, LessonPaymentMode.USE_SUBSCRIPTION, null, null, false);
+        Long recordId = paymentRecords.findByLessonId(past.getId()).orElseThrow().getId();
+        lessons.deleteAsSubscriptionNoShow(teacher, past.getId());
+        assertThat(lessonRepository.findById(past.getId())).isEmpty();
+        assertThat(paymentRecords.findById(recordId).orElseThrow().getLessonId()).isNull();
+        assertThat(subscriptions.summary(teacher, student).used()).isEqualTo(1);
+
+        User otherTeacher = accounts.register("Чужой преподаватель абонемента", "subscription_other_teacher",
+                "subscription.other@example.test", "SubscriptionPassword123", Role.TEACHER, true);
+        mvc.perform(post("/teacher/subscriptions/{id}/cancel-remaining", subscription.getId())
+                        .with(user(otherTeacher.getUsername()).roles("TEACHER")).with(csrf())
+                        .param("studentId", student.getId().toString()))
+                .andExpect(status().isNotFound());
     }
 
     private User verified(User user) {

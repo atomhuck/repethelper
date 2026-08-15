@@ -50,6 +50,7 @@ services:
       SPRING_MAIL_USERNAME: ${MAIL_USERNAME:?Set MAIL_USERNAME in .env.production}
       SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD:?Set MAIL_PASSWORD in .env.production}
       APP_VK_AUTH_ENABLED: ${APP_VK_AUTH_ENABLED:-false}
+      APP_SUBSCRIPTIONS_ENABLED: ${APP_SUBSCRIPTIONS_ENABLED:-false}
       VK_CLIENT_ID: ${VK_CLIENT_ID:-}
       VK_CLIENT_SECRET: ${VK_CLIENT_SECRET:-}
       VK_REDIRECT_URI: ${VK_REDIRECT_URI:-https://${SITE_DOMAIN:?Set SITE_DOMAIN in .env.production}/login/oauth2/code/vk}

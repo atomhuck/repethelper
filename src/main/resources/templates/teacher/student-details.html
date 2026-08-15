@@ -51,6 +51,59 @@
         </form>
     </section>
 
+    <section th:if="${subscriptionEnabled}" class="panel subscription-section">
+        <div class="panel-heading subscription-heading">
+            <div><p class="eyebrow">Предоплаченные занятия · только для преподавателя</p><h2>Абонементы</h2></div>
+            <details class="subscription-create-popover">
+                <summary class="button primary compact">Новый абонемент</summary>
+                <form th:action="@{/teacher/students/{id}/subscriptions(id=${student.id})}" method="post" class="subscription-create-form stack-form" data-subscription-create-form>
+                    <label>Количество занятий<input name="lessonCount" type="number" inputmode="numeric" min="1" max="100" required placeholder="8" data-subscription-count></label>
+                    <label>Общая стоимость<span class="money-input"><input name="totalRubles" type="number" inputmode="numeric" min="1" max="100000000" required placeholder="12 000" data-subscription-total><span>₽</span></span></label>
+                    <div class="subscription-preview" data-subscription-preview>Укажите количество занятий и общую стоимость.</div>
+                    <label class="switch-row"><input type="checkbox" name="applyToNearest" value="true" checked><span><b>Применить к ближайшим занятиям</b><small>Оплаченные вручную занятия будут пропущены.</small></span></label>
+                    <button class="button primary" type="submit">Создать абонемент</button>
+                </form>
+            </details>
+        </div>
+        <div class="subscription-balance-line">
+            <strong th:text="${'Осталось ' + subscriptionSummary.available}">Осталось 0</strong>
+            <span th:text="${'Запланировано ' + subscriptionSummary.planned}">Запланировано 0</span>
+            <span th:text="${'Использовано ' + subscriptionSummary.used}">Использовано 0</span>
+        </div>
+        <div th:if="${subscriptionSummary.packages.empty}" class="empty compact"><p>Абонементов пока нет. Создайте пакет, когда ученик оплатит несколько занятий заранее.</p></div>
+        <div class="subscription-package-list">
+            <article th:each="item : ${subscriptionSummary.packages}" class="subscription-package-card" th:classappend="${item.subscription.cancelled} ? ' cancelled'">
+                <div>
+                    <span class="status-pill accepted" th:if="${!item.subscription.cancelled && item.available > 0}">Активен</span>
+                    <span class="status-pill" th:if="${item.subscription.cancelled}">Остаток отменён</span>
+                    <span class="status-pill" th:if="${!item.subscription.cancelled && item.available == 0}">Завершён</span>
+                    <h3 th:text="${item.subscription.totalLessons + ' занятий · ' + @timeView.money(item.subscription.totalAmountRubles)}">8 занятий · 12 000 ₽</h3>
+                    <p th:text="${'Оформлен ' + @timeView.dateTime(item.subscription.createdAt)}">Оформлен 1 августа</p>
+                    <small th:text="${'Доступно ' + item.available + ' · запланировано ' + item.planned + ' · использовано ' + item.used}">Доступно 4</small>
+                    <details th:if="${!item.history.empty}" class="subscription-history">
+                        <summary>История списаний и резервов</summary>
+                        <div class="subscription-history-list">
+                            <div th:each="entry : ${item.history}" class="subscription-history-row">
+                                <span th:text="${'#' + entry.ordinal}">#1</span>
+                                <a th:if="${entry.lessonId != null}" th:href="@{/lessons/{id}(id=${entry.lessonId},from='student')}" th:text="${@timeView.dateTime(entry.startAt)}">1 августа, 17:00</a>
+                                <span th:if="${entry.lessonId == null}" th:text="${@timeView.dateTime(entry.startAt)}">1 августа, 17:00</span>
+                                <b th:text="${entry.state.name() == 'PLANNED' ? 'Запланировано' : (entry.state.name() == 'NO_SHOW' ? 'Пропуск' : 'Использовано')}">Использовано</b>
+                            </div>
+                        </div>
+                    </details>
+                </div>
+                <div class="subscription-package-actions">
+                    <form th:if="${!item.subscription.cancelled && item.available > 0}" th:action="@{/teacher/subscriptions/{id}/cancel-remaining(id=${item.subscription.id})}" method="post" onsubmit="return confirm('Отменить свободный остаток? Уже закреплённые занятия сохранятся.');">
+                        <input type="hidden" name="studentId" th:value="${student.id}"><button class="button ghost compact" type="submit">Отменить остаток</button>
+                    </form>
+                    <form th:if="${item.planned == 0 && item.used == 0}" th:action="@{/teacher/subscriptions/{id}/delete(id=${item.subscription.id})}" method="post" onsubmit="return confirm('Удалить пустой абонемент?');">
+                        <input type="hidden" name="studentId" th:value="${student.id}"><button class="button danger-button compact" type="submit">Удалить</button>
+                    </form>
+                </div>
+            </article>
+        </div>
+    </section>
+
     <section class="student-overview-grid">
         <article class="panel student-overview-card">
             <div class="panel-heading"><div><p class="eyebrow" th:text="${overview.nearestInProgress() ? 'Сейчас' : 'Дальше по расписанию'}">Дальше по расписанию</p><h2>Ближайшее занятие</h2></div></div>
@@ -64,7 +117,8 @@
                     <b th:text="${@timeView.money(overview.nearest.priceRubles)}">1 500 ₽</b>
                     <span class="payment-pill no-price" th:if="${overview.nearest.paymentStatus.name() == 'NO_PRICE'}">Цена не указана</span>
                     <span class="payment-pill unpaid" th:if="${overview.nearest.paymentStatus.name() == 'UNPAID'}">Не оплачено</span>
-                    <span class="payment-pill paid" th:if="${overview.nearest.paymentStatus.name() == 'PAID'}"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#check}"></use></svg>Оплачено</span>
+                    <span class="payment-pill paid" th:if="${overview.nearest.paymentStatus.name() == 'PAID' && !overview.nearest.paidBySubscription}"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#check}"></use></svg>Оплачено</span>
+                    <span class="payment-pill subscription-paid" th:if="${overview.nearest.paidBySubscription}">Абонемент</span>
                 </div>
                 <div class="row-actions">
                     <a class="button secondary" th:href="@{/lessons/{id}(id=${overview.nearest.id},from='student')}">Открыть занятие</a>
@@ -98,10 +152,11 @@
                     <b th:text="${@timeView.money(overview.previous.priceRubles)}">1 500 ₽</b>
                     <span class="payment-pill no-price" th:if="${overview.previous.paymentStatus.name() == 'NO_PRICE'}">Цена не указана</span>
                     <span class="payment-pill unpaid" th:if="${overview.previous.paymentStatus.name() == 'UNPAID'}">Не оплачено</span>
-                    <span class="payment-pill paid" th:if="${overview.previous.paymentStatus.name() == 'PAID'}"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#check}"></use></svg>Оплачено</span>
+                    <span class="payment-pill paid" th:if="${overview.previous.paymentStatus.name() == 'PAID' && !overview.previous.paidBySubscription}"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#check}"></use></svg>Оплачено</span>
+                    <span class="payment-pill subscription-paid" th:if="${overview.previous.paidBySubscription}">Абонемент</span>
                 </div>
                 <a class="button secondary" th:href="@{/lessons/{id}(id=${overview.previous.id},from='student')}">Открыть занятие</a>
-                <div class="profile-payment-status">
+                <div class="profile-payment-status" th:unless="${overview.previous.paidBySubscription}">
                     <p>Оплата предыдущего занятия</p>
                     <form th:action="@{/teacher/lessons/{id}/payment-status(id=${overview.previous.id})}" method="post" class="payment-actions">
                         <input type="hidden" name="returnToStudentCard" value="true">
@@ -205,5 +260,34 @@
 </main>
 <nav th:replace="~{fragments :: mobileNav(${user}, 'students')}"></nav>
 <footer th:replace="~{fragments :: footer}"></footer>
+<script>
+    (() => {
+        const form = document.querySelector('[data-subscription-create-form]');
+        if (!form) return;
+        const countInput = form.querySelector('[data-subscription-count]');
+        const totalInput = form.querySelector('[data-subscription-total]');
+        const preview = form.querySelector('[data-subscription-preview]');
+        const updatePreview = () => {
+            const count = Number(countInput.value || 0);
+            const total = Number(totalInput.value || 0);
+            if (!Number.isInteger(count) || count < 1 || count > 100 || !Number.isInteger(total) || total < count) {
+                preview.textContent = 'Укажите от 1 до 100 занятий и общую стоимость не меньше количества занятий.';
+                return;
+            }
+            if (total > count * 1_000_000) {
+                preview.textContent = 'На одно занятие должно приходиться не больше 1 000 000 ₽.';
+                return;
+            }
+            const base = Math.floor(total / count);
+            const remainder = total % count;
+            preview.textContent = remainder
+                ? `${count} занятий · ${remainder} по ${(base + 1).toLocaleString('ru-RU')} ₽ и ${count - remainder} по ${base.toLocaleString('ru-RU')} ₽`
+                : `${count} занятий · по ${base.toLocaleString('ru-RU')} ₽`;
+        };
+        countInput.addEventListener('input', updatePreview);
+        totalInput.addEventListener('input', updatePreview);
+        updatePreview();
+    })();
+</script>
 </body>
 </html>

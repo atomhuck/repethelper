@@ -31,19 +31,21 @@ public class LessonService {
     private final AttachmentRepository attachments;
     private final WhiteboardService whiteboards;
     private final AppNotificationService notifications;
+    private final LessonSubscriptionService subscriptions;
     private final Path storageRoot;
     private final ZoneId zone;
     private final Clock clock;
     public LessonService(LessonRepository lessons, UserRepository users, ConnectionRequestRepository connections,
                          LessonSeriesRepository seriesRepository, LessonPaymentRecordRepository paymentRecords,
                          AttachmentRepository attachments, WhiteboardService whiteboards,
-                         AppNotificationService notifications,
+                         AppNotificationService notifications, LessonSubscriptionService subscriptions,
                          @org.springframework.beans.factory.annotation.Value("${app.timezone}") String timezone,
                          @org.springframework.beans.factory.annotation.Value("${app.storage-path}") String storagePath,
                          Clock clock) {
         this.lessons = lessons; this.users = users; this.connections = connections; this.seriesRepository = seriesRepository;
         this.paymentRecords = paymentRecords;
         this.attachments = attachments; this.whiteboards = whiteboards; this.notifications = notifications;
+        this.subscriptions = subscriptions;
         this.storageRoot = Paths.get(storagePath).toAbsolutePath().normalize();
         this.zone = ZoneId.of(timezone); this.clock = clock;
     }
@@ -56,19 +58,53 @@ public class LessonService {
     @Transactional
     public Lesson create(User teacher, Long studentId, LocalDateTime localStart, int duration,
                          LessonRecurrence recurrence, Integer priceRubles) {
+        return create(teacher, studentId, localStart, duration, recurrence, priceRubles,
+                LessonPaymentMode.SINGLE, null, null, false);
+    }
+
+    @Transactional
+    public Lesson create(User teacher, Long studentId, LocalDateTime localStart, int duration,
+                         LessonRecurrence recurrence, Integer priceRubles, LessonPaymentMode paymentMode,
+                         Integer subscriptionLessonCount, Integer subscriptionTotalRubles,
+                         boolean useSubscriptionForSeries) {
         requireTeacher(teacher);
-        validatePrice(priceRubles);
+        LessonPaymentMode mode = paymentMode == null ? LessonPaymentMode.SINGLE : paymentMode;
+        if (!subscriptions.isEnabled() && mode != LessonPaymentMode.SINGLE)
+            throw new IllegalArgumentException("Абонементы временно недоступны");
+        validatePrice(mode == LessonPaymentMode.SINGLE ? priceRubles : null);
         User student = users.findById(studentId).orElseThrow(() -> new IllegalArgumentException("Ученик не найден"));
         if (student.getRole() != Role.STUDENT || !connections.existsByStudentAndTeacherAndStatus(student, teacher, ConnectionStatus.ACCEPTED))
             throw new IllegalArgumentException("Сначала примите ученика");
         Instant start = localStart.atZone(zone).toInstant();
+        LessonSubscription createdSubscription = null;
+        if (mode == LessonPaymentMode.CREATE_SUBSCRIPTION) {
+            if (subscriptionLessonCount == null || subscriptionTotalRubles == null)
+                throw new IllegalArgumentException("Укажите количество занятий и стоимость абонемента");
+            createdSubscription = subscriptions.create(teacher, studentId, subscriptionLessonCount, subscriptionTotalRubles);
+        }
         if (recurrence == LessonRecurrence.WEEKLY) {
-            LessonSeries series = seriesRepository.save(new LessonSeries(teacher, student, start, duration, priceRubles));
-            Lesson lesson = lessons.save(new Lesson(series, 0));
+            LessonSeries series = new LessonSeries(teacher, student, start, duration,
+                    mode == LessonPaymentMode.SINGLE ? priceRubles : null);
+            series.setUseSubscriptionByDefault(mode != LessonPaymentMode.SINGLE && useSubscriptionForSeries);
+            series = seriesRepository.save(series);
+            int initialCount = createdSubscription == null ? 1 : createdSubscription.getTotalLessons();
+            List<Lesson> initialLessons = new ArrayList<>();
+            for (int index = 0; index < initialCount; index++) initialLessons.add(new Lesson(series, index));
+            lessons.saveAllAndFlush(initialLessons);
+            Lesson lesson = initialLessons.getFirst();
+            if (mode == LessonPaymentMode.USE_SUBSCRIPTION && !subscriptions.attachOldestAvailable(teacher, lesson))
+                throw new IllegalArgumentException("В активных абонементах нет свободных занятий");
+            if (createdSubscription != null)
+                subscriptions.allocateNearest(teacher, createdSubscription, createdSubscription.getTotalLessons());
             notifications.seriesCreated(lesson);
             return lesson;
         }
-        Lesson lesson = lessons.save(new Lesson(teacher, student, start, duration, priceRubles));
+        Lesson lesson = lessons.saveAndFlush(new Lesson(teacher, student, start, duration,
+                mode == LessonPaymentMode.SINGLE ? priceRubles : null));
+        if (mode == LessonPaymentMode.USE_SUBSCRIPTION && !subscriptions.attachOldestAvailable(teacher, lesson))
+            throw new IllegalArgumentException("В активных абонементах нет свободных занятий");
+        if (createdSubscription != null)
+            subscriptions.allocateNearest(teacher, createdSubscription, createdSubscription.getTotalLessons());
         notifications.lessonCreated(lesson);
         return lesson;
     }
@@ -132,11 +168,17 @@ public class LessonService {
     }
 
     @Transactional
+    public void deleteAsSubscriptionNoShow(User teacher, Long id) {
+        Lesson lesson = subscriptions.markNoShow(teacher, id);
+        deleteLessons(List.of(lesson), false);
+    }
+
+    @Transactional
     public DeletedLessons deleteForTeacherStudent(User teacher, User student) {
         requireTeacher(teacher);
         List<Lesson> items = lessons.findByTeacherAndStudentOrderByStartAtAsc(teacher, student);
         List<java.util.UUID> boardIds = whiteboards.publicIdsForLessons(items);
-        deleteLessons(items);
+        deleteLessons(items, true);
         // A lesson references its series, therefore make sure the lesson rows are
         // gone before removing the now-unused series in the same transaction.
         lessons.flush();
@@ -174,6 +216,8 @@ public class LessonService {
                                          LessonChangeScope scope, boolean confirmPaidPriceChange) {
         validatePrice(priceRubles);
         Lesson lesson = requireTeacherLessonLocked(teacher, id);
+        if (lesson.isPaidBySubscription())
+            throw new IllegalArgumentException("Сначала верните занятие в абонемент");
         if (scope == LessonChangeScope.FOLLOWING) {
             requireRecurring(lesson);
             LessonSeries series = seriesRepository.findLockedById(lesson.getSeries().getId())
@@ -184,6 +228,10 @@ public class LessonService {
             int updated = 0;
             int skippedPaid = 0;
             for (Lesson item : following) {
+                if (item.isPaidBySubscription()) {
+                    skippedPaid++;
+                    continue;
+                }
                 if (Objects.equals(item.getPriceRubles(), priceRubles)) continue;
                 if (item.getPaymentStatus() == PaymentStatus.PAID) {
                     skippedPaid++;
@@ -216,6 +264,8 @@ public class LessonService {
         if (status == null || status == PaymentStatus.NO_PRICE)
             throw new IllegalArgumentException("Выберите корректный статус оплаты");
         Lesson lesson = requireTeacherLessonLocked(teacher, id);
+        if (lesson.isPaidBySubscription())
+            throw new IllegalArgumentException("Оплата абонементного занятия меняется в его карточке");
         if (expectedPaymentRecordId != null) {
             Long currentRecordId = paymentRecords.findByLessonId(id)
                     .map(LessonPaymentRecord::getId).orElse(null);
@@ -296,6 +346,7 @@ public class LessonService {
                 .filter(l -> l.getStatus() == LessonStatus.CANCELLED || l.isPast(now)).toList();
     }
     public boolean isPast(Lesson lesson) { return lesson.isPast(clock.instant()); }
+    public boolean hasStarted(Lesson lesson) { return !lesson.getStartAt().isAfter(clock.instant()); }
     public ZoneId zone() { return zone; }
     private void materializeBetween(User user, Instant from, Instant until) {
         List<LessonSeries> relevantSeries = user.getRole() == Role.TEACHER
@@ -337,9 +388,27 @@ public class LessonService {
                 if (series.includes(index) && !existing.contains(index)) generated.add(new Lesson(series, index));
             }
         }
-        if (!generated.isEmpty()) lessons.saveAll(generated);
+        if (!generated.isEmpty()) {
+            lessons.saveAllAndFlush(generated);
+            generated.stream().filter(item -> item.getSeries().isUseSubscriptionByDefault())
+                    .forEach(item -> subscriptions.attachOldestAvailable(item.getTeacher(), item));
+        }
     }
     private void deleteLessons(List<Lesson> lessonsToDelete) {
+        deleteLessons(lessonsToDelete, false);
+    }
+
+    private void deleteLessons(List<Lesson> lessonsToDelete, boolean preserveCompletedFinancialHistory) {
+        for (Lesson item : lessonsToDelete) {
+            if (!item.isPaidBySubscription()) continue;
+            boolean completed = !item.getEndAt().isAfter(clock.instant());
+            if (preserveCompletedFinancialHistory && completed) {
+                paymentRecords.anonymizeLesson(item.getId());
+            } else if (!item.getSubscriptionCredit().isConsumed()) {
+                item.releaseSubscriptionCredit();
+            }
+        }
+        lessons.flush();
         List<String> boardImages = whiteboards.storedImagesForLessons(lessonsToDelete);
         List<Attachment> attachmentsToDelete = new ArrayList<>();
         List<String> attachmentFiles = new ArrayList<>();

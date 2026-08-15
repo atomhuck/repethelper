@@ -22,10 +22,14 @@ public class TeacherController {
     private final TeacherProfileService profiles;
     private final LessonService lessons;
     private final CalendarService calendars;
+    private final LessonSubscriptionService subscriptions;
     private final String baseUrl;
     public TeacherController(AccountService accounts, ConnectionService connections, TeacherProfileService profiles,
-                             LessonService lessons, CalendarService calendars, @Value("${app.base-url}") String baseUrl) {
+                             LessonService lessons, CalendarService calendars,
+                             LessonSubscriptionService subscriptions,
+                             @Value("${app.base-url}") String baseUrl) {
         this.accounts = accounts; this.connections = connections; this.profiles = profiles; this.lessons = lessons; this.calendars = calendars;
+        this.subscriptions = subscriptions;
         this.baseUrl = baseUrl.replaceAll("/+$", "");
     }
 
@@ -52,6 +56,8 @@ public class TeacherController {
         model.addAttribute("pending", connections.pendingFor(teacher));
         model.addAttribute("students", students);
         model.addAttribute("latestPrices", lessons.latestPrices(teacher, students));
+        model.addAttribute("subscriptionEnabled", subscriptions.isEnabled());
+        model.addAttribute("subscriptionSummaries", subscriptions.summariesForStudents(teacher, students));
         var upcoming = lessons.upcoming(teacher);
         model.addAttribute("upcoming", upcoming);
         model.addAttribute("upcomingPreview", upcoming.stream().limit(4).toList());
@@ -114,7 +120,9 @@ public class TeacherController {
         if (errors.hasErrors()) return error(flash, errors.getAllErrors().getFirst().getDefaultMessage(), "/teacher");
         try {
             Lesson lesson = lessons.create(current(auth), form.getStudentId(), form.getStartAt(),
-                    form.getDurationMinutes(), form.getRecurrence(), form.getPriceRubles());
+                    form.getDurationMinutes(), form.getRecurrence(), form.getPriceRubles(), form.getPaymentMode(),
+                    form.getSubscriptionLessonCount(), form.getSubscriptionTotalRubles(),
+                    form.isUseSubscriptionForSeries());
             flash.addFlashAttribute("success", form.getRecurrence() == LessonRecurrence.WEEKLY
                     ? "Еженедельные занятия добавлены в расписание"
                     : "Занятие добавлено в расписание");

@@ -12,6 +12,7 @@ import ru.repethelper.domain.HomeworkSubmissionStatus;
 import ru.repethelper.domain.PaymentStatus;
 import ru.repethelper.service.AccountService;
 import ru.repethelper.service.LessonService;
+import ru.repethelper.service.LessonSubscriptionService;
 import ru.repethelper.service.TeacherStudentOverviewService;
 import ru.repethelper.web.form.PrivateLessonNoteForm;
 import ru.repethelper.web.form.StudentDescriptionForm;
@@ -24,13 +25,16 @@ public class TeacherStudentController {
     private final TeacherStudentOverviewService overviews;
     private final LessonService lessons;
     private final TextLinkifier textLinkifier;
+    private final LessonSubscriptionService subscriptions;
 
     public TeacherStudentController(AccountService accounts, TeacherStudentOverviewService overviews,
-                                    LessonService lessons, TextLinkifier textLinkifier) {
+                                    LessonService lessons, TextLinkifier textLinkifier,
+                                    LessonSubscriptionService subscriptions) {
         this.accounts = accounts;
         this.overviews = overviews;
         this.lessons = lessons;
         this.textLinkifier = textLinkifier;
+        this.subscriptions = subscriptions;
     }
 
     @GetMapping("/students/{studentId}")
@@ -48,6 +52,8 @@ public class TeacherStudentController {
         model.addAttribute("descriptionForm", descriptionForm);
         model.addAttribute("homeworkHtml", linkify(overview.nearest() == null ? null : overview.nearest().getHomeworkText()));
         model.addAttribute("materialsHtml", linkify(overview.previous() == null ? null : overview.previous().getLessonNotesText()));
+        model.addAttribute("subscriptionEnabled", subscriptions.isEnabled());
+        model.addAttribute("subscriptionSummary", subscriptions.summary(teacher, overview.relation().getStudent()));
         return "teacher/student-details";
     }
 

@@ -141,6 +141,17 @@ public class AppNotificationService {
     }
 
     @Transactional
+    public void subscriptionCreated(LessonSubscription subscription) {
+        enqueueVerified(EmailNotificationType.SUBSCRIPTION_CREATED, subscription.getStudent(),
+                subscription.getStudent().getId(), subscription.getTeacher().getId(), null, null,
+                "Преподаватель добавил абонемент в RepetHelper",
+                "Преподаватель " + subscription.getTeacher().getDisplayName()
+                        + " добавил вам абонемент на " + subscription.getTotalLessons() + " занятий."
+                        + "\n\nОткрыть кабинет: " + baseUrl + "/student",
+                "SUBSCRIPTION_CREATED:" + subscription.getId(), clock.instant());
+    }
+
+    @Transactional
     public void cancelReminder(Long lessonId) {
         if (lessonId != null) notifications.cancelPendingReminder(lessonId);
     }

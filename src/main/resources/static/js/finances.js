@@ -236,7 +236,14 @@
     const pill = document.createElement("span");
     pill.className = `payment-pill ${row.paymentStatus === "PAID" ? "paid" : "unpaid"}`;
     pill.textContent = paymentLabel(row.paymentStatus);
-    value.append(amount, pill);
+    value.append(amount);
+    if (row.paidBySubscription) {
+      const source = document.createElement("span");
+      source.className = "payment-pill subscription-paid";
+      source.textContent = "Абонемент";
+      value.append(source);
+    }
+    value.append(pill);
     article.append(avatar, main, value);
     if (!row.deleted) {
       const actions = document.createElement("div");
@@ -246,7 +253,14 @@
       open.href = `/lessons/${row.lessonId}`;
       open.setAttribute("aria-label", "Открыть занятие");
       open.innerHTML = '<svg class="ui-icon" aria-hidden="true"><use href="/brand/ui-icons.svg#arrow-right"></use></svg>';
-      actions.append(open, paymentForm(row));
+      actions.append(open);
+      if (row.paidBySubscription) {
+        const sourceLink = document.createElement("a");
+        sourceLink.className = "button ghost compact";
+        sourceLink.href = `/lessons/${row.lessonId}`;
+        sourceLink.textContent = "Абонемент";
+        actions.append(sourceLink);
+      } else actions.append(paymentForm(row));
       article.append(actions);
     }
     return article;

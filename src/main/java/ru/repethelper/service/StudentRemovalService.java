@@ -28,12 +28,15 @@ public class StudentRemovalService {
     private final WhiteboardRepository boards;
     private final LessonService lessonService;
     private final BoardRealtimeHub boardHub;
+    private final LessonSubscriptionService subscriptions;
 
     public StudentRemovalService(ConnectionRequestRepository requests, LessonRepository lessons,
                                  LessonSeriesRepository series, AttachmentRepository attachments,
-                                 WhiteboardRepository boards, LessonService lessonService, BoardRealtimeHub boardHub) {
+                                 WhiteboardRepository boards, LessonService lessonService, BoardRealtimeHub boardHub,
+                                 LessonSubscriptionService subscriptions) {
         this.requests = requests; this.lessons = lessons; this.series = series; this.attachments = attachments;
         this.boards = boards; this.lessonService = lessonService; this.boardHub = boardHub;
+        this.subscriptions = subscriptions;
     }
 
     @Transactional(readOnly = true)
@@ -54,6 +57,7 @@ public class StudentRemovalService {
                 series.findByTeacherAndStudent(teacher, student).size(),
                 attachments.countByLessonIn(pairLessons), boards.countByLessonIn(pairLessons));
         LessonService.DeletedLessons deleted = lessonService.deleteForTeacherStudent(teacher, student);
+        subscriptions.deleteForPair(teacher, student);
         requests.deleteByStudentAndTeacher(student, teacher);
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override public void afterCommit() { boardHub.closeBoards(deleted.boardIds()); }

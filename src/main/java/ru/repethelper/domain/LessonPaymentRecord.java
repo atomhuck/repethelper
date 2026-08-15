@@ -26,6 +26,10 @@ public class LessonPaymentRecord {
     @Column(name = "recorded_at", nullable = false)
     private Instant recordedAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_source", nullable = false, length = 20)
+    private PaymentSource paymentSource = PaymentSource.MANUAL;
+
     protected LessonPaymentRecord() {}
 
     public Long getId() { return id; }
@@ -34,4 +38,5 @@ public class LessonPaymentRecord {
     public int getAmountRubles() { return amountRubles; }
     public Instant getLessonStartAt() { return lessonStartAt; }
     public Instant getRecordedAt() { return recordedAt; }
+    public PaymentSource getPaymentSource() { return paymentSource; }
 }

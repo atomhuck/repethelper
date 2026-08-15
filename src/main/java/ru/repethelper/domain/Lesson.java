@@ -40,6 +40,9 @@ public class Lesson {
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_status", nullable = false, length = 20)
     private PaymentStatus paymentStatus = PaymentStatus.NO_PRICE;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "subscription_credit_id", unique = true)
+    private LessonSubscriptionCredit subscriptionCredit;
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
     @Column(name = "updated_at", nullable = false)
@@ -76,6 +79,8 @@ public class Lesson {
     public String getMeetingUrl() { return meetingUrl; }
     public Integer getPriceRubles() { return priceRubles; }
     public PaymentStatus getPaymentStatus() { return paymentStatus; }
+    public LessonSubscriptionCredit getSubscriptionCredit() { return subscriptionCredit; }
+    public boolean isPaidBySubscription() { return subscriptionCredit != null; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
     public Instant getEndAt() { return startAt.plus(Duration.ofMinutes(durationMinutes)); }
@@ -89,17 +94,33 @@ public class Lesson {
     public void updateTeacherPrivateNote(String teacherPrivateNote) { this.teacherPrivateNote = teacherPrivateNote; touch(); }
     public void updateMeetingUrl(String meetingUrl) { this.meetingUrl = meetingUrl; touch(); }
     public void updatePrice(Integer priceRubles) {
+        if (subscriptionCredit != null) throw new IllegalStateException("Сначала верните занятие в абонемент");
         if (Objects.equals(this.priceRubles, priceRubles)) return;
         this.priceRubles = priceRubles;
         this.paymentStatus = priceRubles == null ? PaymentStatus.NO_PRICE : PaymentStatus.UNPAID;
         touch();
     }
     public void updatePaymentStatus(PaymentStatus paymentStatus) {
+        if (subscriptionCredit != null) throw new IllegalStateException("Оплата абонементного занятия меняется через абонемент");
         Objects.requireNonNull(paymentStatus);
         if (priceRubles == null || paymentStatus == PaymentStatus.NO_PRICE)
             throw new IllegalArgumentException("Сначала укажите стоимость занятия");
         if (this.paymentStatus == paymentStatus) return;
         this.paymentStatus = paymentStatus;
+        touch();
+    }
+    public void attachSubscriptionCredit(LessonSubscriptionCredit credit) {
+        if (subscriptionCredit != null && !subscriptionCredit.getId().equals(credit.getId()))
+            throw new IllegalStateException("К занятию уже применён абонемент");
+        this.subscriptionCredit = Objects.requireNonNull(credit);
+        this.priceRubles = credit.getAmountRubles();
+        this.paymentStatus = PaymentStatus.PAID;
+        touch();
+    }
+    public void releaseSubscriptionCredit() {
+        if (subscriptionCredit == null) return;
+        this.subscriptionCredit = null;
+        this.paymentStatus = PaymentStatus.UNPAID;
         touch();
     }
     public void cancel() { this.status = LessonStatus.CANCELLED; touch(); }

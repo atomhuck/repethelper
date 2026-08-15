@@ -16,10 +16,13 @@ public class LessonController {
     private final AttachmentService attachments;
     private final WhiteboardService whiteboards;
     private final TextLinkifier textLinkifier;
+    private final LessonSubscriptionService subscriptions;
     public LessonController(AccountService accounts, LessonService lessons, AttachmentService attachments,
-                            WhiteboardService whiteboards, TextLinkifier textLinkifier) {
+                            WhiteboardService whiteboards, TextLinkifier textLinkifier,
+                            LessonSubscriptionService subscriptions) {
         this.accounts = accounts; this.lessons = lessons; this.attachments = attachments; this.whiteboards = whiteboards;
         this.textLinkifier = textLinkifier;
+        this.subscriptions = subscriptions;
     }
     @GetMapping("/lessons/{id}")
     String details(Authentication auth, @PathVariable Long id,
@@ -43,6 +46,7 @@ public class LessonController {
         model.addAttribute("lesson", lesson);
         model.addAttribute("board", board);
         model.addAttribute("past", lessons.isPast(lesson));
+        model.addAttribute("started", lessons.hasStarted(lesson));
         model.addAttribute("materialsForm", materials);
         model.addAttribute("meetingUrlForm", meetingUrl);
         if (user.getRole() == Role.TEACHER) model.addAttribute("privateNoteForm", privateNote);
@@ -53,6 +57,9 @@ public class LessonController {
         model.addAttribute("lessonForm", schedule);
         model.addAttribute("homeworkFiles", all.stream().filter(a -> a.getCategory() == AttachmentCategory.HOMEWORK).toList());
         model.addAttribute("notesFiles", all.stream().filter(a -> a.getCategory() == AttachmentCategory.LESSON_NOTES).toList());
+        model.addAttribute("subscriptionEnabled", subscriptions.isEnabled());
+        if (user.getRole() == Role.TEACHER && subscriptions.isEnabled())
+            model.addAttribute("subscriptionSummary", subscriptions.summary(user, lesson.getStudent()));
         return "lesson";
     }
 }

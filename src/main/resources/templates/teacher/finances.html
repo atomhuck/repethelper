@@ -76,15 +76,16 @@
                     <small th:if="${row.deleted}">Финансовая запись сохранена без данных ученика</small>
                     <small th:unless="${row.deleted}" th:text="${row.cancelled ? 'Отменённое занятие' : (row.completed ? 'Занятие завершено' : 'Будущее занятие')}">Занятие завершено</small>
                 </div>
-                <div class="finance-row-value"><strong th:text="${@timeView.money(row.amountRubles)}">1 500 ₽</strong><span class="payment-pill paid" th:if="${row.paymentStatus.name() == 'PAID'}">Оплачено</span><span class="payment-pill unpaid" th:if="${row.paymentStatus.name() == 'UNPAID'}">Не оплачено</span></div>
+                <div class="finance-row-value"><strong th:text="${@timeView.money(row.amountRubles)}">1 500 ₽</strong><span class="payment-pill subscription-paid" th:if="${row.paidBySubscription}">Абонемент</span><span class="payment-pill paid" th:if="${row.paymentStatus.name() == 'PAID'}">Оплачено</span><span class="payment-pill unpaid" th:if="${row.paymentStatus.name() == 'UNPAID'}">Не оплачено</span></div>
                 <div class="finance-row-actions" th:unless="${row.deleted}">
                     <a class="icon-button" th:href="@{/lessons/{id}(id=${row.lessonId})}" aria-label="Открыть занятие" title="Открыть занятие"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#arrow-right}"></use></svg></a>
-                    <form class="finance-payment-form" th:action="@{/teacher/finances/lessons/{id}/payment-status(id=${row.lessonId})}" method="post">
+                    <form th:unless="${row.paidBySubscription}" class="finance-payment-form" th:action="@{/teacher/finances/lessons/{id}/payment-status(id=${row.lessonId})}" method="post">
                         <input type="hidden" name="status" th:value="${row.paymentStatus.name() == 'PAID' ? 'UNPAID' : 'PAID'}">
                         <input th:if="${row.paymentRecordId != null}" type="hidden" name="expectedPaymentRecordId" th:value="${row.paymentRecordId}">
                         <input type="hidden" name="month" th:value="${overview.selectedMonth}">
                         <button class="button compact" th:classappend="${row.paymentStatus.name() == 'PAID'} ? 'ghost' : 'primary'" type="submit" th:text="${row.paymentStatus.name() == 'PAID' ? 'Вернуть в неоплаченные' : 'Деньги получены'}">Деньги получены</button>
                     </form>
+                    <a th:if="${row.paidBySubscription}" class="button ghost compact" th:href="@{/lessons/{id}(id=${row.lessonId})}">Абонемент</a>
                 </div>
             </article>
         </div>

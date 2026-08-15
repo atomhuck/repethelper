@@ -49,6 +49,11 @@
         </form>
     </section>
 
+    <section th:if="${user.role.name() == 'STUDENT' && lesson.paidBySubscription}" class="panel subscription-lesson-banner student-view">
+        <span class="subscription-mark">✓</span>
+        <div><p class="eyebrow">Оплата</p><h2>Оплачено абонементом</h2><p>Это занятие уже зарезервировано в вашем пакете у преподавателя.</p></div>
+    </section>
+
     <section th:if="${user.role.name() == 'TEACHER'}" class="panel finance-card">
         <div class="finance-summary">
             <div>
@@ -58,9 +63,18 @@
             </div>
             <span class="payment-pill no-price" th:if="${lesson.paymentStatus.name() == 'NO_PRICE'}">Цена не указана</span>
             <span class="payment-pill unpaid" th:if="${lesson.paymentStatus.name() == 'UNPAID'}">Не оплачено</span>
-            <span class="payment-pill paid" th:if="${lesson.paymentStatus.name() == 'PAID'}"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#check}"></use></svg>Оплачено</span>
+            <span class="payment-pill paid" th:if="${lesson.paymentStatus.name() == 'PAID' && !lesson.paidBySubscription}"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#check}"></use></svg>Оплачено</span>
+            <span class="payment-pill subscription-paid" th:if="${lesson.paidBySubscription}"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#check}"></use></svg>Оплачено абонементом</span>
         </div>
-        <div class="finance-actions">
+        <div th:if="${lesson.paidBySubscription}" class="subscription-lesson-details">
+            <p th:text="${'Место ' + lesson.subscriptionCredit.ordinal + ' из ' + lesson.subscriptionCredit.subscription.totalLessons}">Место 2 из 8</p>
+            <small>Цена и статус закреплены за абонементом. Чтобы изменить их вручную, сначала верните занятие в баланс.</small>
+            <div class="subscription-lesson-actions">
+                <form th:action="@{/teacher/lessons/{id}/subscription/release(id=${lesson.id})}" method="post" onsubmit="return confirm('Вернуть это занятие в свободный баланс абонемента?');"><button class="button secondary" type="submit">Вернуть в абонемент</button></form>
+                <form th:if="${started}" th:action="@{/teacher/lessons/{id}/subscription/no-show(id=${lesson.id})}" method="post" onsubmit="return confirm('Списать занятие как пропуск? Оно исчезнет из календаря, а место не вернётся в баланс.');"><button class="button danger-button" type="submit">Списать как пропуск</button></form>
+            </div>
+        </div>
+        <div th:unless="${lesson.paidBySubscription}" class="finance-actions">
             <form th:action="@{/teacher/lessons/{id}/payment-status(id=${lesson.id})}" method="post" class="payment-actions">
                 <button class="payment-button paid" type="submit" name="status" value="PAID"
                         th:disabled="${lesson.priceRubles == null}"
@@ -71,7 +85,7 @@
             </form>
             <small th:if="${lesson.priceRubles == null}">Сначала назначьте стоимость занятия.</small>
         </div>
-        <details class="finance-editor">
+        <details th:unless="${lesson.paidBySubscription}" class="finance-editor">
             <summary class="button secondary">Изменить стоимость</summary>
             <form class="stack-form price-update-form" th:action="@{/teacher/lessons/{id}/price(id=${lesson.id})}"
                   th:object="${priceForm}" method="post"
@@ -90,6 +104,11 @@
                 <div class="finance-editor-footer"><small>Оставьте поле пустым, чтобы убрать стоимость.</small><button class="button primary" type="submit">Сохранить стоимость</button></div>
             </form>
         </details>
+        <form th:if="${!lesson.paidBySubscription && lesson.paymentStatus.name() != 'PAID' && subscriptionSummary != null && subscriptionSummary.available > 0}"
+              th:action="@{/teacher/lessons/{id}/subscription/attach(id=${lesson.id})}" method="post" class="attach-subscription-action">
+            <div><b th:text="${'Доступно по абонементам: ' + subscriptionSummary.available}">Доступно: 3</b><small>Будет использовано самое старое свободное место.</small></div>
+            <button class="button secondary" type="submit">Оплатить абонементом</button>
+        </form>
     </section>
 
     <section class="panel board-card">
