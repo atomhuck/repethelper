@@ -24,6 +24,9 @@ public class LessonForm {
     @Min(value = 1, message = "Укажите стоимость абонемента")
     @Max(value = 100_000_000, message = "Стоимость абонемента слишком большая")
     private Integer subscriptionTotalRubles;
+    @Min(value = 1, message = "Укажите от 1 до 104 занятий в календаре")
+    @Max(value = 104, message = "За один раз можно добавить не больше 104 занятий")
+    private Integer weeklyLessonCount;
     private boolean useSubscriptionForSeries = true;
     @NotNull
     private LessonRecurrence recurrence = LessonRecurrence.ONCE;
@@ -43,6 +46,8 @@ public class LessonForm {
     public void setSubscriptionLessonCount(Integer subscriptionLessonCount) { this.subscriptionLessonCount = subscriptionLessonCount; }
     public Integer getSubscriptionTotalRubles() { return subscriptionTotalRubles; }
     public void setSubscriptionTotalRubles(Integer subscriptionTotalRubles) { this.subscriptionTotalRubles = subscriptionTotalRubles; }
+    public Integer getWeeklyLessonCount() { return weeklyLessonCount; }
+    public void setWeeklyLessonCount(Integer weeklyLessonCount) { this.weeklyLessonCount = weeklyLessonCount; }
     public boolean isUseSubscriptionForSeries() { return useSubscriptionForSeries; }
     public void setUseSubscriptionForSeries(boolean useSubscriptionForSeries) { this.useSubscriptionForSeries = useSubscriptionForSeries; }
     public LessonRecurrence getRecurrence() { return recurrence; }

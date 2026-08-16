@@ -59,7 +59,7 @@ public class LessonService {
     public Lesson create(User teacher, Long studentId, LocalDateTime localStart, int duration,
                          LessonRecurrence recurrence, Integer priceRubles) {
         return create(teacher, studentId, localStart, duration, recurrence, priceRubles,
-                LessonPaymentMode.SINGLE, null, null, false);
+                LessonPaymentMode.SINGLE, null, null, false, null);
     }
 
     @Transactional
@@ -67,10 +67,21 @@ public class LessonService {
                          LessonRecurrence recurrence, Integer priceRubles, LessonPaymentMode paymentMode,
                          Integer subscriptionLessonCount, Integer subscriptionTotalRubles,
                          boolean useSubscriptionForSeries) {
+        return create(teacher, studentId, localStart, duration, recurrence, priceRubles, paymentMode,
+                subscriptionLessonCount, subscriptionTotalRubles, useSubscriptionForSeries, null);
+    }
+
+    @Transactional
+    public Lesson create(User teacher, Long studentId, LocalDateTime localStart, int duration,
+                         LessonRecurrence recurrence, Integer priceRubles, LessonPaymentMode paymentMode,
+                         Integer subscriptionLessonCount, Integer subscriptionTotalRubles,
+                         boolean useSubscriptionForSeries, Integer weeklyLessonCount) {
         requireTeacher(teacher);
         LessonPaymentMode mode = paymentMode == null ? LessonPaymentMode.SINGLE : paymentMode;
         if (!subscriptions.isEnabled() && mode != LessonPaymentMode.SINGLE)
             throw new IllegalArgumentException("Абонементы временно недоступны");
+        if (recurrence == LessonRecurrence.ONCE && weeklyLessonCount != null && weeklyLessonCount != 1)
+            throw new IllegalArgumentException("Для разового занятия количество в календаре должно быть равно одному");
         validatePrice(mode == LessonPaymentMode.SINGLE ? priceRubles : null);
         User student = users.findById(studentId).orElseThrow(() -> new IllegalArgumentException("Ученик не найден"));
         if (student.getRole() != Role.STUDENT || !connections.existsByStudentAndTeacherAndStatus(student, teacher, ConnectionStatus.ACCEPTED))
@@ -83,20 +94,23 @@ public class LessonService {
             createdSubscription = subscriptions.create(teacher, studentId, subscriptionLessonCount, subscriptionTotalRubles);
         }
         if (recurrence == LessonRecurrence.WEEKLY) {
+            int calendarCount = resolveWeeklyLessonCount(mode, createdSubscription, teacher, student, weeklyLessonCount);
+            Integer fallbackPrice = fallbackSeriesPrice(mode, priceRubles, createdSubscription, teacher, student, calendarCount);
             LessonSeries series = new LessonSeries(teacher, student, start, duration,
-                    mode == LessonPaymentMode.SINGLE ? priceRubles : null);
+                    fallbackPrice);
             series.setUseSubscriptionByDefault(mode != LessonPaymentMode.SINGLE && useSubscriptionForSeries);
+            series.limitToOccurrences(calendarCount);
             series = seriesRepository.save(series);
-            int initialCount = createdSubscription == null ? 1 : createdSubscription.getTotalLessons();
             List<Lesson> initialLessons = new ArrayList<>();
-            for (int index = 0; index < initialCount; index++) initialLessons.add(new Lesson(series, index));
+            for (int index = 0; index < calendarCount; index++) initialLessons.add(new Lesson(series, index));
             lessons.saveAllAndFlush(initialLessons);
             Lesson lesson = initialLessons.getFirst();
-            if (mode == LessonPaymentMode.USE_SUBSCRIPTION && !subscriptions.attachOldestAvailable(teacher, lesson))
+            if (mode == LessonPaymentMode.USE_SUBSCRIPTION
+                    && subscriptions.allocateNearestAvailable(teacher, student, calendarCount) == 0)
                 throw new IllegalArgumentException("В активных абонементах нет свободных занятий");
             if (createdSubscription != null)
                 subscriptions.allocateNearest(teacher, createdSubscription, createdSubscription.getTotalLessons());
-            notifications.seriesCreated(lesson);
+            notifications.seriesCreated(lesson, calendarCount);
             return lesson;
         }
         Lesson lesson = lessons.saveAndFlush(new Lesson(teacher, student, start, duration,
@@ -209,6 +223,34 @@ public class LessonService {
         Lesson lesson = requireTeacherLesson(teacher, id);
         lesson.updateHomeworkSubmissionStatus(status);
         return lesson;
+    }
+
+    private int resolveWeeklyLessonCount(LessonPaymentMode mode, LessonSubscription createdSubscription,
+                                         User teacher, User student, Integer requested) {
+        if (requested != null) {
+            if (requested < 1 || requested > 104) throw new IllegalArgumentException("Укажите от 1 до 104 занятий в календаре");
+            return requested;
+        }
+        if (mode == LessonPaymentMode.CREATE_SUBSCRIPTION) return createdSubscription.getTotalLessons();
+        if (mode == LessonPaymentMode.USE_SUBSCRIPTION) {
+            int available = subscriptions.availableCount(teacher, student);
+            if (available < 1) throw new IllegalArgumentException("В активных абонементах нет свободных занятий");
+            return Math.min(available, 104);
+        }
+        return 4;
+    }
+
+    private Integer fallbackSeriesPrice(LessonPaymentMode mode, Integer priceRubles,
+                                        LessonSubscription createdSubscription, User teacher, User student,
+                                        int calendarCount) {
+        if (mode == LessonPaymentMode.SINGLE) return priceRubles;
+        if (createdSubscription != null) {
+            return createdSubscription.getTotalAmountRubles() / createdSubscription.getTotalLessons();
+        }
+        Integer creditPrice = subscriptions.fallbackCreditAmount(teacher, student, calendarCount);
+        if (creditPrice != null) return creditPrice;
+        return lessons.findFirstByTeacherAndStudentAndPriceRublesIsNotNullOrderByStartAtDescIdDesc(teacher, student)
+                .map(Lesson::getPriceRubles).orElse(null);
     }
 
     @Transactional

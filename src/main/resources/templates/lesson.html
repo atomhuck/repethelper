@@ -92,7 +92,7 @@
                   th:data-paid="${lesson.paymentStatus.name() == 'PAID'}"
                   th:data-current-price="${lesson.priceRubles}">
                 <label>Новая стоимость
-                    <span class="money-input"><input type="number" inputmode="numeric" min="1" max="1000000" step="1"
+                    <span class="money-input"><input type="text" inputmode="numeric" autocomplete="off" data-money-input
                                                      th:field="*{priceRubles}" placeholder="Цена не указана"><span>₽</span></span>
                 </label>
                 <fieldset th:if="${lesson.recurring}" class="choice-fieldset">
@@ -141,8 +141,8 @@
     </script>
 
     <form th:if="${user.role.name() == 'TEACHER'}" th:action="@{/teacher/lessons/{id}/materials(id=${lesson.id})}" th:object="${materialsForm}" method="post" class="lesson-sections">
-        <section class="panel material-card"><div class="material-heading"><span class="material-icon green"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#check}"></use></svg></span><div><p class="eyebrow">До следующей встречи</p><h2>Домашнее задание</h2></div></div><label class="sr-only" for="homeworkText">Текст домашнего задания</label><textarea id="homeworkText" th:field="*{homeworkText}" rows="7" placeholder="Опишите задание, номера задач и полезные ссылки..."></textarea></section>
-        <section class="panel material-card"><div class="material-heading"><span class="material-icon cyan"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#book-open}"></use></svg></span><div><p class="eyebrow">Видно ученику</p><h2>Материалы занятия</h2></div></div><label class="sr-only" for="lessonNotesText">Материалы занятия</label><textarea id="lessonNotesText" th:field="*{lessonNotesText}" rows="7" placeholder="Темы, разобранные задачи и полезные ссылки для ученика..."></textarea></section>
+        <section class="panel material-card"><div class="material-heading"><span class="material-icon green"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#check}"></use></svg></span><div><p class="eyebrow">До следующей встречи</p><h2>Домашнее задание</h2></div></div><label class="sr-only" for="homeworkText">Текст домашнего задания</label><textarea id="homeworkText" th:field="*{homeworkText}" rows="7" placeholder="Опишите задание, номера задач и полезные ссылки..."></textarea><div class="teacher-link-preview" data-link-preview="homeworkText" th:if="${homeworkHtml != null}"><small>Предпросмотр · ссылки кликабельны</small><div class="rich-text" th:utext="${homeworkHtml}"></div></div></section>
+        <section class="panel material-card"><div class="material-heading"><span class="material-icon cyan"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#book-open}"></use></svg></span><div><p class="eyebrow">Видно ученику</p><h2>Материалы занятия</h2></div></div><label class="sr-only" for="lessonNotesText">Материалы занятия</label><textarea id="lessonNotesText" th:field="*{lessonNotesText}" rows="7" placeholder="Темы, разобранные задачи и полезные ссылки для ученика..."></textarea><div class="teacher-link-preview" data-link-preview="lessonNotesText" th:if="${lessonNotesHtml != null}"><small>Предпросмотр · ссылки кликабельны</small><div class="rich-text" th:utext="${lessonNotesHtml}"></div></div></section>
         <div class="save-bar"><span>Домашку и материалы видит ученик</span><button class="button primary" type="submit">Сохранить материалы</button></div>
     </form>
 

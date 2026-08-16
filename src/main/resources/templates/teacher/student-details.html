@@ -58,7 +58,7 @@
                 <summary class="button primary compact">Новый абонемент</summary>
                 <form th:action="@{/teacher/students/{id}/subscriptions(id=${student.id})}" method="post" class="subscription-create-form stack-form" data-subscription-create-form>
                     <label>Количество занятий<input name="lessonCount" type="number" inputmode="numeric" min="1" max="100" required placeholder="8" data-subscription-count></label>
-                    <label>Общая стоимость<span class="money-input"><input name="totalRubles" type="number" inputmode="numeric" min="1" max="100000000" required placeholder="12 000" data-subscription-total><span>₽</span></span></label>
+                    <label>Общая стоимость<span class="money-input"><input name="totalRubles" type="text" inputmode="numeric" autocomplete="off" required placeholder="12 000" data-subscription-total data-money-input><span>₽</span></span></label>
                     <div class="subscription-preview" data-subscription-preview>Укажите количество занятий и общую стоимость.</div>
                     <label class="switch-row"><input type="checkbox" name="applyToNearest" value="true" checked><span><b>Применить к ближайшим занятиям</b><small>Оплаченные вручную занятия будут пропущены.</small></span></label>
                     <button class="button primary" type="submit">Создать абонемент</button>
@@ -269,7 +269,7 @@
         const preview = form.querySelector('[data-subscription-preview]');
         const updatePreview = () => {
             const count = Number(countInput.value || 0);
-            const total = Number(totalInput.value || 0);
+            const total = Number(String(totalInput.value || '').replace(/[^0-9]/g, ''));
             if (!Number.isInteger(count) || count < 1 || count > 100 || !Number.isInteger(total) || total < count) {
                 preview.textContent = 'Укажите от 1 до 100 занятий и общую стоимость не меньше количества занятий.';
                 return;

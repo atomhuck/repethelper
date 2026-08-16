@@ -8,6 +8,7 @@ import ru.repethelper.domain.User;
 import ru.repethelper.service.AccountService;
 import ru.repethelper.service.LessonService;
 import ru.repethelper.service.LessonSubscriptionService;
+import ru.repethelper.web.MoneyInputParser;
 
 @Controller
 @RequestMapping("/teacher")
@@ -15,23 +16,25 @@ public class LessonSubscriptionController {
     private final AccountService accounts;
     private final LessonSubscriptionService subscriptions;
     private final LessonService lessons;
+    private final MoneyInputParser money;
 
     public LessonSubscriptionController(AccountService accounts, LessonSubscriptionService subscriptions,
-                                        LessonService lessons) {
+                                        LessonService lessons, MoneyInputParser money) {
         this.accounts = accounts;
         this.subscriptions = subscriptions;
         this.lessons = lessons;
+        this.money = money;
     }
 
     @PostMapping("/students/{studentId}/subscriptions")
     String create(Authentication auth, @PathVariable Long studentId,
-                  @RequestParam int lessonCount, @RequestParam int totalRubles,
+                  @RequestParam int lessonCount, @RequestParam String totalRubles,
                   @RequestParam(defaultValue = "false") boolean applyToNearest,
                   RedirectAttributes flash) {
         try {
             User teacher = current(auth);
             var result = subscriptions.createAndAllocate(
-                    teacher, studentId, lessonCount, totalRubles, applyToNearest);
+                    teacher, studentId, lessonCount, money.parseRequired(totalRubles, "стоимость абонемента"), applyToNearest);
             int attached = result.attachedLessons();
             flash.addFlashAttribute("success", attached == 0
                     ? "Абонемент создан"

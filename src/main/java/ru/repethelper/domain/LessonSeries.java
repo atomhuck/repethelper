@@ -112,6 +112,12 @@ public class LessonSeries {
         if (cancelledFromIndex == null || index < cancelledFromIndex) cancelledFromIndex = index;
         updatedAt = Instant.now();
     }
+    /** Makes a newly created series finite. Existing series deliberately keep a null boundary. */
+    public void limitToOccurrences(int count) {
+        if (count < 1) throw new IllegalArgumentException("Количество занятий должно быть не меньше одного");
+        cancelledFromIndex = count;
+        updatedAt = Instant.now();
+    }
 
     public void exclude(int index) {
         excludedOccurrenceIndexes.add(index);

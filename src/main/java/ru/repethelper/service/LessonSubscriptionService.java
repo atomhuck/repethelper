@@ -79,6 +79,40 @@ public class LessonSubscriptionService {
         return attached;
     }
 
+    /** Applies credits from all active packages to the nearest eligible lessons in FIFO order. */
+    @Transactional
+    public int allocateNearestAvailable(User teacher, User student, int maximum) {
+        requireTeacher(teacher);
+        if (maximum < 1) return 0;
+        List<Lesson> candidates = lessons.findByTeacherAndStudentOrderByStartAtAsc(teacher, student).stream()
+                .filter(item -> item.getStatus() == LessonStatus.SCHEDULED)
+                .filter(item -> !item.isPaidBySubscription())
+                .filter(item -> item.getPaymentStatus() != PaymentStatus.PAID)
+                .sorted(Comparator.comparing(Lesson::getStartAt).thenComparing(Lesson::getId))
+                .toList();
+        int attached = 0;
+        for (Lesson candidate : candidates) {
+            if (attached >= maximum || !attachOldestAvailable(teacher, candidate)) break;
+            attached++;
+        }
+        return attached;
+    }
+
+    @Transactional
+    public int availableCount(User teacher, User student) {
+        requireTeacher(teacher);
+        return credits.findAvailableForUpdate(teacher, student).size();
+    }
+
+    /** The final applicable credit gives a stable price to the meetings beyond an existing balance. */
+    @Transactional
+    public Integer fallbackCreditAmount(User teacher, User student, int calendarCount) {
+        requireTeacher(teacher);
+        List<LessonSubscriptionCredit> available = credits.findAvailableForUpdate(teacher, student);
+        if (available.isEmpty()) return null;
+        return available.get(Math.min(calendarCount, available.size()) - 1).getAmountRubles();
+    }
+
     @Transactional
     public boolean attachOldestAvailable(User teacher, Lesson lesson) {
         requireEnabled();

@@ -122,7 +122,7 @@ public class TeacherController {
             Lesson lesson = lessons.create(current(auth), form.getStudentId(), form.getStartAt(),
                     form.getDurationMinutes(), form.getRecurrence(), form.getPriceRubles(), form.getPaymentMode(),
                     form.getSubscriptionLessonCount(), form.getSubscriptionTotalRubles(),
-                    form.isUseSubscriptionForSeries());
+                    form.isUseSubscriptionForSeries(), form.getWeeklyLessonCount());
             flash.addFlashAttribute("success", form.getRecurrence() == LessonRecurrence.WEEKLY
                     ? "Еженедельные занятия добавлены в расписание"
                     : "Занятие добавлено в расписание");

@@ -21,13 +21,13 @@
                     <label class="choice-card payment-mode-card"><input type="radio" th:field="*{paymentMode}" value="CREATE_SUBSCRIPTION"><span><b>Новый абонемент</b><small>Создать пакет и покрыть ближайшие занятия</small></span></label>
                 </fieldset>
                 <label id="single-price-fields">Стоимость занятия
-                    <span class="money-input"><input id="lesson-price" type="number" inputmode="numeric" min="1" max="1000000" step="1" th:field="*{priceRubles}" placeholder="Не указана"><span>₽</span></span>
+                    <span class="money-input"><input id="lesson-price" type="text" inputmode="numeric" autocomplete="off" data-money-input th:field="*{priceRubles}" placeholder="Не указана"><span>₽</span></span>
                     <small id="price-hint">Необязательно · видно только вам</small>
                 </label>
                 <div id="new-subscription-fields" class="subscription-create-fields" hidden>
                     <div class="subscription-fields-grid">
                         <label>Количество занятий<input id="subscription-count" type="number" inputmode="numeric" min="1" max="100" th:field="*{subscriptionLessonCount}" placeholder="Например, 8"></label>
-                        <label>Стоимость пакета<span class="money-input"><input id="subscription-total" type="number" inputmode="numeric" min="1" max="100000000" th:field="*{subscriptionTotalRubles}" placeholder="Например, 12 000"><span>₽</span></span></label>
+                        <label>Стоимость пакета<span class="money-input"><input id="subscription-total" type="text" inputmode="numeric" autocomplete="off" data-money-input th:field="*{subscriptionTotalRubles}" placeholder="Например, 12 000"><span>₽</span></span></label>
                     </div>
                     <div id="subscription-preview" class="subscription-preview">Укажите количество занятий и общую стоимость.</div>
                 </div>
@@ -40,6 +40,10 @@
                     <label class="choice-card"><input type="radio" th:field="*{recurrence}" value="ONCE"><span><b>Только в этот день</b><small>Одно занятие без повторов</small></span></label>
                     <label class="choice-card"><input type="radio" th:field="*{recurrence}" value="WEEKLY"><span><b id="weekly-label">Каждую неделю</b><small>В этот день недели и это время</small></span></label>
                 </fieldset>
+                <label id="weekly-count-field" hidden>Количество занятий в календаре
+                    <input id="weekly-lesson-count" type="number" inputmode="numeric" min="1" max="104" step="1" th:field="*{weeklyLessonCount}" placeholder="4">
+                    <small id="weekly-count-hint">Будет добавлено 4 занятия: по одному каждую неделю.</small>
+                </label>
                 <button class="button primary new-lesson-submit" type="submit">Добавить в календарь</button>
             </form>
         </details>
@@ -103,12 +107,17 @@
         const subscriptionCount = document.getElementById('subscription-count');
         const subscriptionTotal = document.getElementById('subscription-total');
         const subscriptionPreview = document.getElementById('subscription-preview');
+        const weeklyCountField = document.getElementById('weekly-count-field');
+        const weeklyCount = document.getElementById('weekly-lesson-count');
+        const weeklyCountHint = document.getElementById('weekly-count-hint');
         const balanceHint = document.getElementById('subscription-balance-hint');
         const useSubscriptionChoice = document.getElementById('use-subscription-choice');
         const seriesSubscriptionSetting = document.getElementById('series-subscription-setting');
         const paymentModes = [...document.querySelectorAll('input[name="paymentMode"]')];
         const recurrenceInputs = [...document.querySelectorAll('input[name="recurrence"]')];
         let priceWasEnteredManually = Boolean(price?.value);
+        let weeklyCountWasEnteredManually = Boolean(weeklyCount?.value);
+        const digitsNumber = value => Number(String(value || '').replace(/[^0-9]/g, ''));
         const weekdays = ['воскресеньям', 'понедельникам', 'вторникам', 'средам', 'четвергам', 'пятницам', 'субботам'];
         const updateWeeklyLabel = () => {
             if (!start.value) {
@@ -127,8 +136,8 @@
         const currentPaymentMode = () => paymentModes.find(input => input.checked)?.value || 'SINGLE';
         const updateSubscriptionPreview = () => {
             if (!subscriptionPreview) return;
-            const count = Number(subscriptionCount?.value || 0);
-            const total = Number(subscriptionTotal?.value || 0);
+            const count = digitsNumber(subscriptionCount?.value);
+            const total = digitsNumber(subscriptionTotal?.value);
             if (!Number.isInteger(count) || count < 1 || count > 100 || !Number.isInteger(total) || total < count) {
                 subscriptionPreview.textContent = 'Укажите от 1 до 100 занятий и общую стоимость не меньше количества занятий.';
                 return;
@@ -143,6 +152,41 @@
                 ? `${count} занятий · ${remainder} по ${(base + 1).toLocaleString('ru-RU')} ₽ и ${count - remainder} по ${base.toLocaleString('ru-RU')} ₽`
                 : `${count} занятий · по ${base.toLocaleString('ru-RU')} ₽`;
         };
+        const selectedStudentAvailable = () => Number(student?.selectedOptions[0]?.dataset.subscriptionAvailable || 0);
+        const plannedSubscriptionCount = () => {
+            const mode = currentPaymentMode();
+            return mode === 'CREATE_SUBSCRIPTION' ? digitsNumber(subscriptionCount?.value) :
+                (mode === 'USE_SUBSCRIPTION' ? selectedStudentAvailable() : 0);
+        };
+        const setAutomaticWeeklyCount = count => {
+            if (!weeklyCount || weeklyCountWasEnteredManually || !count) return;
+            weeklyCount.value = String(Math.max(1, Math.min(104, count)));
+        };
+        const updateWeeklyCountUi = () => {
+            const weekly = recurrenceInputs.some(input => input.checked && input.value === 'WEEKLY');
+            if (!weeklyCountField || !weeklyCount) return;
+            weeklyCountField.hidden = !weekly;
+            weeklyCount.disabled = !weekly;
+            if (!weekly) return;
+            const mode = currentPaymentMode();
+            const paid = plannedSubscriptionCount();
+            if (mode === 'SINGLE') setAutomaticWeeklyCount(4);
+            else setAutomaticWeeklyCount(paid);
+            const count = digitsNumber(weeklyCount.value);
+            if (!count || count < 1 || count > 104) {
+                weeklyCountHint.textContent = 'Укажите от 1 до 104 занятий.';
+                return;
+            }
+            if (mode === 'SINGLE') {
+                weeklyCountHint.textContent = `Будет добавлено ${count} занятий: по одному каждую неделю.`;
+                return;
+            }
+            if (count > paid) {
+                weeklyCountHint.textContent = `Оплачено по абонементу: ${paid} · будет добавлено: ${count} · ${count - paid} последующих занятий будут неоплаченными.`;
+            } else {
+                weeklyCountHint.textContent = `Оплачено по абонементу: ${paid} · будет добавлено: ${count}.`;
+            }
+        };
         const updatePaymentUi = () => {
             const mode = currentPaymentMode();
             if (singleFields) singleFields.hidden = mode !== 'SINGLE';
@@ -153,11 +197,13 @@
             const weekly = recurrenceInputs.some(input => input.checked && input.value === 'WEEKLY');
             if (seriesSubscriptionSetting) seriesSubscriptionSetting.hidden = mode === 'SINGLE' || !weekly;
             updateSubscriptionPreview();
+            updateWeeklyCountUi();
         };
         paymentModes.forEach(input => input.addEventListener('change', updatePaymentUi));
         recurrenceInputs.forEach(input => input.addEventListener('change', updatePaymentUi));
-        subscriptionCount?.addEventListener('input', updateSubscriptionPreview);
+        subscriptionCount?.addEventListener('input', () => { updateSubscriptionPreview(); updateWeeklyCountUi(); });
         subscriptionTotal?.addEventListener('input', updateSubscriptionPreview);
+        weeklyCount?.addEventListener('input', () => { weeklyCountWasEnteredManually = weeklyCount.value !== ''; updateWeeklyCountUi(); });
         student?.addEventListener('change', () => {
             const suggested = student.selectedOptions[0]?.dataset.lastPrice;
             const available = Number(student.selectedOptions[0]?.dataset.subscriptionAvailable || 0);

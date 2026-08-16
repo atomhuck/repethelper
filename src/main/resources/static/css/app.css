@@ -1064,6 +1064,18 @@ textarea:focus {
   pointer-events: none;
 }
 
+.teacher-link-preview {
+  display: grid;
+  gap: 7px;
+  margin-top: 12px;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+.teacher-link-preview > small { color: var(--muted); font-weight: 650; }
+.teacher-link-preview .rich-text { font-size: .9rem; }
+
 /* Shared lists and summaries */
 .panel-heading {
   display: flex;
@@ -3014,6 +3026,24 @@ textarea:focus {
 }
 
 @media (max-width: 768px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  .popover-panel,
+  .new-lesson-form,
+  .money-input,
+  .subscription-preview {
+    max-inline-size: 100%;
+    min-inline-size: 0;
+  }
+
+  .subscription-fields-grid {
+    grid-template-columns: 1fr;
+  }
+
   .topbar {
     height: 60px;
     padding-inline: 12px;

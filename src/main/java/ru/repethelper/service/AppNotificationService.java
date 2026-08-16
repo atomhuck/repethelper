@@ -74,12 +74,13 @@ public class AppNotificationService {
     }
 
     @Transactional
-    public void seriesCreated(Lesson lesson) {
+    public void seriesCreated(Lesson lesson, int lessonCount) {
         enqueueVerified(EmailNotificationType.LESSON_SERIES_CREATED, lesson.getStudent(),
                 lesson.getStudent().getId(), lesson.getTeacher().getId(), lesson.getId(),
                 lesson.getSeries().getId().toString(),
                 "Добавлены еженедельные занятия в RepetHelper",
-                lessonDescription("Преподаватель добавил еженедельные занятия. Ближайшая встреча:", lesson, true),
+                lessonDescription("Преподаватель добавил еженедельные занятия: " + lessonCount
+                        + ". Ближайшая встреча:", lesson, true),
                 "SERIES_CREATED:" + lesson.getSeries().getId(), clock.instant());
     }
 

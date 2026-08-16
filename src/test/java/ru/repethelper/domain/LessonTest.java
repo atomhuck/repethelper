@@ -100,4 +100,13 @@ class LessonTest {
         assertThat(series.priceAt(5)).isEqualTo(1_800);
         assertThat(series.priceAt(8)).isEqualTo(1_800);
     }
+
+    @Test void finiteSeriesIncludesExactlyItsPlannedOccurrences() {
+        LessonSeries series = new LessonSeries(teacher, student, Instant.parse("2026-07-23T10:00:00Z"), 60);
+        series.limitToOccurrences(4);
+
+        assertThat(series.includes(0)).isTrue();
+        assertThat(series.includes(3)).isTrue();
+        assertThat(series.includes(4)).isFalse();
+    }
 }
