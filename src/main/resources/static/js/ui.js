@@ -99,6 +99,9 @@
     menus().forEach(menu => {
       if (!menu.contains(event.target)) closeMenu(menu);
     });
+    document.querySelectorAll("details.popover[open]").forEach(popover => {
+      if (!popover.contains(event.target)) popover.removeAttribute("open");
+    });
   });
 
   document.addEventListener("keydown", event => {
@@ -108,6 +111,13 @@
       event.preventDefault();
       closeMenu(opened);
       opened.querySelector("summary")?.focus();
+      return;
+    }
+    const popover = document.querySelector("details.popover[open]");
+    if (popover) {
+      event.preventDefault();
+      popover.removeAttribute("open");
+      popover.querySelector("summary")?.focus();
     }
   });
 
