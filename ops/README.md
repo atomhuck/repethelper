@@ -129,7 +129,21 @@ cd /opt/repethelper
 ./ops/deploy.sh sha-previous
 ```
 
-## 6. Проверка после запуска
+## 6. Закрытая админ-панель
+
+Админ-панель выключена по умолчанию и не открывается на публичном домене. После выпуска кода:
+
+1. Добавьте в `/opt/repethelper/.env.production` три разных случайных секрета для `APP_ADMIN_GATEWAY_SECRET`, `APP_ADMIN_TOTP_ENCRYPTION_KEY` и `APP_ADMIN_BOOTSTRAP_TOKEN`.
+2. Не включайте `APP_ADMIN_ENABLED` до настройки Tailscale.
+3. От root выполните `bash /opt/repethelper/ops/install-admin-tailscale.sh`, войдите в собственный tailnet и одобрите VPS.
+4. Убедитесь, что `tailscale serve status` направляет только на `http://127.0.0.1:8081`.
+5. Установите `APP_ADMIN_ENABLED=true`, разверните текущий SHA и откройте приватный адрес Tailscale с путём `/control/bootstrap`.
+6. Введите bootstrap-токен, создайте отдельный пароль администратора, добавьте TOTP в приложение-аутентификатор и сохраните recovery-коды.
+7. После первой настройки удалите `APP_ADMIN_BOOTSTRAP_TOKEN` из `.env.production` и разверните тот же образ ещё раз: bootstrap автоматически станет недоступен.
+
+Никогда не публикуйте порт `8081` наружу и не добавляйте маршрут `/control` в публичный Caddy-сайт.
+
+## 7. Проверка после запуска
 
 ```bash
 docker compose --env-file .env.production -f compose.production.yaml ps

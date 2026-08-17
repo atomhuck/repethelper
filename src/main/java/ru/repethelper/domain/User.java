@@ -40,6 +40,16 @@ public class User {
     private String privacyVersion;
     @Column(name = "personal_data_consent_at")
     private Instant personalDataConsentAt;
+    @Column(name = "last_login_at")
+    private Instant lastLoginAt;
+    @Column(name = "last_activity_at")
+    private Instant lastActivityAt;
+    @Column(name = "deletion_scheduled_at")
+    private Instant deletionScheduledAt;
+    @Column(name = "deletion_completed_at")
+    private Instant deletionCompletedAt;
+    @Column(name = "must_change_password", nullable = false)
+    private boolean mustChangePassword;
 
     protected User() {}
     public User(String username, String passwordHash, String displayName, Role role) {
@@ -59,6 +69,11 @@ public class User {
     public Role getRole() { return role; }
     public boolean isEnabled() { return enabled; }
     public Instant getCreatedAt() { return createdAt; }
+    public Instant getLastLoginAt() { return lastLoginAt; }
+    public Instant getLastActivityAt() { return lastActivityAt; }
+    public Instant getDeletionScheduledAt() { return deletionScheduledAt; }
+    public Instant getDeletionCompletedAt() { return deletionCompletedAt; }
+    public boolean isMustChangePassword() { return mustChangePassword; }
     public long getAuthVersion() { return authVersion; }
     public Instant getLockedUntil() { return lockedUntil; }
     public String getTermsVersion() { return termsVersion; }
@@ -66,6 +81,7 @@ public class User {
     public String getPrivacyVersion() { return privacyVersion; }
     public Instant getPersonalDataConsentAt() { return personalDataConsentAt; }
     public void setDisplayName(String displayName) { this.displayName = displayName; }
+    public void setUsername(String username) { this.username = username; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
     public void setEmail(String email) {
         if (this.email == null || !this.email.equalsIgnoreCase(email)) this.emailVerifiedAt = null;
@@ -104,5 +120,12 @@ public class User {
         clearLoginFailures();
     }
     public void invalidateSessions() { this.authVersion++; }
+    public void setEnabled(boolean enabled) { this.enabled = enabled; }
+    public void recordLogin() { this.lastLoginAt = Instant.now(); }
+    public void recordActivity(Instant activityAt) { this.lastActivityAt = activityAt; }
+    public void scheduleDeletion(Instant when) { this.deletionScheduledAt = when; this.deletionCompletedAt = null; }
+    public void cancelDeletion() { this.deletionScheduledAt = null; }
+    public void completeDeletion() { this.deletionCompletedAt = Instant.now(); this.deletionScheduledAt = null; }
+    public void setMustChangePassword(boolean value) { this.mustChangePassword = value; }
     public boolean hasPassword() { return passwordHash != null && !passwordHash.isBlank(); }
 }

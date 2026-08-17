@@ -25,6 +25,11 @@ public class ProductionSafetyValidator implements ApplicationRunner {
     private final String teacherName;
     private final String teacherCode;
     private final String allowedOrigins;
+    private final boolean adminEnabled;
+    private final String adminGatewaySecret;
+    private final String adminTotpEncryptionKey;
+    private final boolean metricsEnabled;
+    private final String metricsHmacKey;
 
     public ProductionSafetyValidator(
             @Value("${spring.datasource.password:}") String databasePassword,
@@ -32,13 +37,30 @@ public class ProductionSafetyValidator implements ApplicationRunner {
             @Value("${app.teacher.password:}") String teacherPassword,
             @Value("${app.teacher.name:}") String teacherName,
             @Value("${app.teacher.code:}") String teacherCode,
-            @Value("${app.websocket.allowed-origins:}") String allowedOrigins) {
+            @Value("${app.websocket.allowed-origins:}") String allowedOrigins,
+            @Value("${app.admin.enabled:false}") boolean adminEnabled,
+            @Value("${app.admin.gateway-secret:}") String adminGatewaySecret,
+            @Value("${app.admin.totp-encryption-key:}") String adminTotpEncryptionKey,
+            @Value("${app.metrics.enabled:false}") boolean metricsEnabled,
+            @Value("${app.metrics.hmac-key:}") String metricsHmacKey) {
         this.databasePassword = databasePassword;
         this.teacherUsername = teacherUsername;
         this.teacherPassword = teacherPassword;
         this.teacherName = teacherName;
         this.teacherCode = teacherCode;
         this.allowedOrigins = allowedOrigins;
+        this.adminEnabled = adminEnabled;
+        this.adminGatewaySecret = adminGatewaySecret;
+        this.adminTotpEncryptionKey = adminTotpEncryptionKey;
+        this.metricsEnabled = metricsEnabled;
+        this.metricsHmacKey = metricsHmacKey;
+    }
+
+    // Keeps the small constructor used by configuration unit tests and local tooling stable.
+    ProductionSafetyValidator(String databasePassword, String teacherUsername, String teacherPassword,
+                              String teacherName, String teacherCode, String allowedOrigins) {
+        this(databasePassword, teacherUsername, teacherPassword, teacherName, teacherCode, allowedOrigins,
+                false, "", "", false, "");
     }
 
     @Override
@@ -58,6 +80,11 @@ public class ProductionSafetyValidator implements ApplicationRunner {
                 || !TEACHER_CODE.matcher(teacherCode.trim()).matches()) {
             throw unsafe("TEACHER_CODE must contain 8-30 letters, digits, _ or -");
         }
+        if (adminEnabled) {
+            requireSecret(adminGatewaySecret, "APP_ADMIN_GATEWAY_SECRET");
+            requireSecret(adminTotpEncryptionKey, "APP_ADMIN_TOTP_ENCRYPTION_KEY");
+        }
+        if (metricsEnabled) requireSecret(metricsHmacKey, "APP_METRICS_HMAC_KEY");
 
         String[] origins = allowedOrigins == null ? new String[0] : allowedOrigins.split(",");
         if (origins.length != 1) throw unsafe("exactly one WebSocket origin is required");

@@ -52,6 +52,14 @@ management:
 app:
   base-url: ${APP_BASE_URL:http://localhost:8080}
   account-gate-enabled: ${APP_ACCOUNT_GATE_ENABLED:true}
+  admin:
+    enabled: ${APP_ADMIN_ENABLED:false}
+    gateway-secret: ${APP_ADMIN_GATEWAY_SECRET:}
+    totp-encryption-key: ${APP_ADMIN_TOTP_ENCRYPTION_KEY:}
+    bootstrap-token: ${APP_ADMIN_BOOTSTRAP_TOKEN:}
+  metrics:
+    enabled: ${APP_METRICS_ENABLED:false}
+    hmac-key: ${APP_METRICS_HMAC_KEY:}
   subscriptions:
     enabled: ${APP_SUBSCRIPTIONS_ENABLED:true}
   timezone: Europe/Moscow

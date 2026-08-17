@@ -51,6 +51,12 @@ services:
       SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD:?Set MAIL_PASSWORD in .env.production}
       APP_VK_AUTH_ENABLED: ${APP_VK_AUTH_ENABLED:-false}
       APP_SUBSCRIPTIONS_ENABLED: ${APP_SUBSCRIPTIONS_ENABLED:-false}
+      APP_ADMIN_ENABLED: ${APP_ADMIN_ENABLED:-false}
+      APP_ADMIN_GATEWAY_SECRET: ${APP_ADMIN_GATEWAY_SECRET:-}
+      APP_ADMIN_TOTP_ENCRYPTION_KEY: ${APP_ADMIN_TOTP_ENCRYPTION_KEY:-}
+      APP_ADMIN_BOOTSTRAP_TOKEN: ${APP_ADMIN_BOOTSTRAP_TOKEN:-}
+      APP_METRICS_ENABLED: ${APP_METRICS_ENABLED:-false}
+      APP_METRICS_HMAC_KEY: ${APP_METRICS_HMAC_KEY:-}
       VK_CLIENT_ID: ${VK_CLIENT_ID:-}
       VK_CLIENT_SECRET: ${VK_CLIENT_SECRET:-}
       VK_REDIRECT_URI: ${VK_REDIRECT_URI:-https://${SITE_DOMAIN:?Set SITE_DOMAIN in .env.production}/login/oauth2/code/vk}
@@ -86,10 +92,12 @@ services:
     restart: unless-stopped
     environment:
       SITE_DOMAIN: ${SITE_DOMAIN:?Set SITE_DOMAIN in .env.production}
+      ADMIN_GATEWAY_SECRET: ${APP_ADMIN_GATEWAY_SECRET:-}
     ports:
       - "80:80"
       - "443:443"
       - "443:443/udp"
+      - "127.0.0.1:8081:8081"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data

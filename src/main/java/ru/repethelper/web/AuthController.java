@@ -108,6 +108,7 @@ public class AuthController {
                 User user = existing.get().getUser();
                 if (!user.isEnabled()) throw new IllegalArgumentException("Аккаунт отключён");
                 vk.recordLogin(existing.get()); authenticate(user, request);
+                accounts.recordLogin(user);
                 attempts.loginSucceeded(user.getUsername()); vk.clearPending(request.getSession());
                 return homeFor(user, request.getSession());
             }
@@ -153,6 +154,25 @@ public class AuthController {
     @GetMapping("/account/security")
     String security(Authentication auth, Model model) {
         User user = current(auth); model.addAttribute("user", user); model.addAttribute("vkIdentity", vk.findVkIdentity(user).orElse(null)); return "account-security";
+    }
+
+    @GetMapping("/account/change-password")
+    String changePasswordPage(Authentication auth, Model model) {
+        model.addAttribute("user", current(auth)); return "change-password";
+    }
+
+    @PostMapping("/account/change-password")
+    String changePassword(Authentication auth, @RequestParam String currentPassword, @RequestParam String password,
+                          @RequestParam String passwordConfirmation, RedirectAttributes flash) {
+        User user = current(auth);
+        if (!accounts.matchesPassword(user, currentPassword)) {
+            flash.addFlashAttribute("error", "Текущий пароль указан неверно"); return "redirect:/account/change-password";
+        }
+        if (!password.equals(passwordConfirmation)) {
+            flash.addFlashAttribute("error", "Пароли не совпадают"); return "redirect:/account/change-password";
+        }
+        try { accounts.setPassword(user, password); flash.addFlashAttribute("success", "Пароль обновлён"); return "redirect:/login?passwordChanged"; }
+        catch (IllegalArgumentException ex) { flash.addFlashAttribute("error", ex.getMessage()); return "redirect:/account/change-password"; }
     }
 
     @GetMapping("/account/security/vk/link")

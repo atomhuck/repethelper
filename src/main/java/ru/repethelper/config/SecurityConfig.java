@@ -18,22 +18,30 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, AccountService accounts,
                                              LoginAttemptService attempts, InvitationService invitations,
-                                             @Value("${app.account-gate-enabled:true}") boolean accountGateEnabled) throws Exception {
+                                             @Value("${app.account-gate-enabled:true}") boolean accountGateEnabled,
+                                             AdminGatewayFilter adminGatewayFilter, AdminSessionFilter adminSessionFilter,
+                                             ProductActivityFilter productActivityFilter) throws Exception {
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers("/css/**", "/js/**", "/vendor/**", "/brand/**", "/fonts/**", "/login", "/register",
                         "/forgot-password", "/reset-password",
                         "/oauth2/**", "/login/oauth2/**", "/auth/vk/**",
+                        "/join/**",
                         "/invite/**",
+                        "/control/**",
                         "/legal/**", "/error", "/actuator/health", "/actuator/health/**").permitAll()
                 .requestMatchers("/teacher/**").hasRole("TEACHER")
                 .requestMatchers("/student/**").hasRole("STUDENT")
                 .anyRequest().authenticated())
             .addFilterBefore(new LoginRateLimitFilter(attempts), UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(adminGatewayFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterAfter(adminSessionFilter, AdminGatewayFilter.class)
             .addFilterAfter(new AccountStateFilter(accounts, accountGateEnabled), UsernamePasswordAuthenticationFilter.class)
+            .addFilterAfter(productActivityFilter, AccountStateFilter.class)
             .formLogin(form -> form.loginPage("/login")
                 .successHandler((request, response, authentication) -> {
                     attempts.loginSucceeded(authentication.getName());
                     var user = accounts.requireByUsername(authentication.getName());
+                    accounts.recordLogin(user);
                     if (accounts.needsLegalAcceptance(user) || user.getEmail() == null) {
                         response.sendRedirect("/account/consent");
                     } else if (!user.isEmailVerified()) {

@@ -151,11 +151,17 @@ public class AccountService implements UserDetailsService {
         validatePassword(password);
         User managed = users.findById(user.getId()).orElseThrow();
         managed.changePassword(encoder.encode(password));
+        managed.setMustChangePassword(false);
     }
 
     @Transactional
     public void invalidateSessions(User user) {
         users.findById(user.getId()).orElseThrow().invalidateSessions();
+    }
+
+    @Transactional
+    public void recordLogin(User user) {
+        users.findById(user.getId()).orElseThrow().recordLogin();
     }
 
     public void validatePassword(String password) {

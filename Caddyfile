@@ -3,6 +3,8 @@
 
 	@internal path /actuator /actuator/*
 	respond @internal 404
+	@privateControl path /admin /admin/* /control /control/* /internal-control /internal-control/*
+	respond @privateControl 404
 
 	request_body {
 		max_size 80MB
@@ -21,4 +23,15 @@
 	log {
 		output discard
 	}
+}
+
+# Listens only on the host loopback address (published by Compose). Tailscale Serve
+# forwards here; this route is deliberately separate from the public site.
+:8081 {
+	@control path /control /control/*
+	handle @control {
+		header X-RepetHelper-Admin-Gateway "{$ADMIN_GATEWAY_SECRET}"
+		reverse_proxy app:8080
+	}
+	respond 404
 }

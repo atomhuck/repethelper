@@ -36,6 +36,10 @@ public class AccountStateFilter extends OncePerRequestFilter {
                     response.sendRedirect("/verify-email/pending");
                     return;
                 }
+                if (user.isMustChangePassword()) {
+                    response.sendRedirect("/account/change-password");
+                    return;
+                }
             }
         }
         chain.doFilter(request, response);
@@ -48,6 +52,7 @@ public class AccountStateFilter extends OncePerRequestFilter {
                 || path.equals("/reset-password") || path.equals("/login")
                 || path.equals("/register") || path.startsWith("/oauth2/") || path.startsWith("/login/oauth2/")
                 || path.startsWith("/auth/vk/") || path.equals("/account/security")
+                || path.equals("/account/change-password")
                 || path.equals("/error") || path.equals("/logout");
     }
 }
