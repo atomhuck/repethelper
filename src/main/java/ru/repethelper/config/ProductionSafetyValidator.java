@@ -1,6 +1,7 @@
 package ru.repethelper.config;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
@@ -31,6 +32,7 @@ public class ProductionSafetyValidator implements ApplicationRunner {
     private final boolean metricsEnabled;
     private final String metricsHmacKey;
 
+    @Autowired
     public ProductionSafetyValidator(
             @Value("${spring.datasource.password:}") String databasePassword,
             @Value("${app.teacher.username:}") String teacherUsername,
