@@ -71,12 +71,22 @@ public class AdminConsoleService {
     }
 
     public boolean isEnabled() { return enabled; }
-    public boolean bootstrapAllowed() { return enabled && adminCount() == 0 && bootstrapToken.length() >= 24; }
+    /**
+     * The initial setup page is already behind the private Tailscale gateway.
+     * Requiring an operator to copy a server-side secret through another channel
+     * made first setup needlessly fragile. A configured bootstrap token remains
+     * supported for installations that want that extra ceremony, but it is not
+     * required: the page closes permanently as soon as the first account exists.
+     */
+    public boolean bootstrapAllowed() { return enabled && adminCount() == 0; }
+    public boolean bootstrapTokenRequired() { return !bootstrapToken.isBlank(); }
     public long adminCount() { return jdbc.sql("select count(*) from admin_accounts").query(Long.class).single(); }
 
     @Transactional
     public BootstrapResult bootstrap(String token, String username, String password, String sourceIp) {
-        if (!bootstrapAllowed() || !safeEquals(bootstrapToken, token)) throw new IllegalArgumentException("Настройка администратора недоступна");
+        if (!bootstrapAllowed() || (bootstrapTokenRequired() && !safeEquals(bootstrapToken, token))) {
+            throw new IllegalArgumentException("Настройка администратора недоступна");
+        }
         validateAdmin(username, password);
         String secret = Totp.newSecret();
         Instant now = clock.instant();

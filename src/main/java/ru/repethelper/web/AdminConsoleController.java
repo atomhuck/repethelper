@@ -29,6 +29,7 @@ public class AdminConsoleController {
     @GetMapping("/bootstrap")
     String bootstrap(Model model) {
         if (!admins.bootstrapAllowed()) return "error";
+        model.addAttribute("bootstrapTokenRequired", admins.bootstrapTokenRequired());
         return "control/bootstrap";
     }
 
