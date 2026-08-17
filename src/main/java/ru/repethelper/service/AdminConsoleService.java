@@ -21,6 +21,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.sql.Timestamp;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.time.*;
@@ -96,7 +97,7 @@ public class AdminConsoleService {
                     insert into admin_accounts(username,password_hash,totp_secret_ciphertext,enabled,auth_version,created_at,updated_at)
                     values (:username,:password,:secret,true,0,:now,:now) returning id
                     """).param("username", username.trim().toLowerCase(Locale.ROOT)).param("password", encoder.encode(password))
-                    .param("secret", encrypt(secret)).param("now", now).query(Long.class).single();
+                    .param("secret", encrypt(secret)).param("now", timestamp(now)).query(Long.class).single();
         } catch (DataIntegrityViolationException ex) { throw new IllegalArgumentException("Этот логин администратора уже занят"); }
         List<String> codes = createRecoveryCodes(id, now);
         audit(id, "ADMIN_BOOTSTRAPPED", "ADMIN", id, "Первичная настройка", sourceIp, Map.of());
@@ -126,7 +127,7 @@ public class AdminConsoleService {
             return Optional.empty();
         }
         Instant now = clock.instant();
-        jdbc.sql("update admin_accounts set last_login_at=:now,updated_at=:now where id=:id").param("now", now).param("id", id).update();
+        jdbc.sql("update admin_accounts set last_login_at=:now,updated_at=:now where id=:id").param("now", timestamp(now)).param("id", id).update();
         audit(id, "ADMIN_LOGIN_SUCCEEDED", "ADMIN", id, null, sourceIp, Map.of());
         return Optional.of(new AdminSession(id, now, now, now, account.authVersion));
     }
@@ -142,8 +143,8 @@ public class AdminConsoleService {
         RecoveryCode matching = codes.stream().filter(item -> encoder.matches(code.trim().toUpperCase(Locale.ROOT), item.hash)).findFirst().orElse(null);
         if (matching == null) { audit(id, "ADMIN_RECOVERY_FAILED", "ADMIN", id, null, sourceIp, Map.of()); return Optional.empty(); }
         Instant now = clock.instant();
-        jdbc.sql("update admin_recovery_codes set used_at=:now where id=:id and used_at is null").param("now", now).param("id", matching.id).update();
-        jdbc.sql("update admin_accounts set last_login_at=:now,updated_at=:now where id=:id").param("now", now).param("id", id).update();
+        jdbc.sql("update admin_recovery_codes set used_at=:now where id=:id and used_at is null").param("now", timestamp(now)).param("id", matching.id).update();
+        jdbc.sql("update admin_accounts set last_login_at=:now,updated_at=:now where id=:id").param("now", timestamp(now)).param("id", id).update();
         audit(id, "ADMIN_RECOVERY_USED", "ADMIN", id, "Использован recovery-код", sourceIp, Map.of());
         return Optional.of(new AdminSession(id, now, now, now, account.authVersion));
     }
@@ -184,7 +185,7 @@ public class AdminConsoleService {
         user.setEnabled(false); user.invalidateSessions(); users.save(user);
         jdbc.sql("insert into user_account_restrictions(user_id,admin_id,public_reason,internal_note,starts_at,ends_at) values (:user,:admin,:public,:internal,:now,:ends)")
                 .param("user", userId).param("admin", adminId).param("public", publicReason.trim())
-                .param("internal", blankToNull(internalNote)).param("now", now).param("ends", endsAt).update();
+                .param("internal", blankToNull(internalNote)).param("now", timestamp(now)).param("ends", timestamp(endsAt)).update();
         audit(adminId, "USER_BLOCKED", "USER", userId, requiredReason(reason), sourceIp, Map.of("temporary", endsAt != null));
     }
 
@@ -192,7 +193,7 @@ public class AdminConsoleService {
     public void unblockUser(long adminId, long userId, String sourceIp, String reason) {
         User user = requireUser(userId);
         jdbc.sql("update user_account_restrictions set lifted_at=:now,lifted_by_admin_id=:admin where user_id=:user and lifted_at is null")
-                .param("now", clock.instant()).param("admin", adminId).param("user", userId).update();
+                .param("now", timestamp(clock.instant())).param("admin", adminId).param("user", userId).update();
         if (user.getDeletionScheduledAt() == null) user.setEnabled(true);
         user.invalidateSessions(); users.save(user);
         audit(adminId, "USER_UNBLOCKED", "USER", userId, requiredReason(reason), sourceIp, Map.of());
@@ -214,7 +215,7 @@ public class AdminConsoleService {
     public void cancelDeletion(long adminId, long userId, String sourceIp, String reason) {
         User user = requireUser(userId); user.cancelDeletion();
         boolean restricted = jdbc.sql("select exists(select 1 from user_account_restrictions where user_id=:id and lifted_at is null and (ends_at is null or ends_at > :now))")
-                .param("id", userId).param("now", clock.instant()).query(Boolean.class).single();
+                .param("id", userId).param("now", timestamp(clock.instant())).query(Boolean.class).single();
         user.setEnabled(!restricted); user.invalidateSessions(); users.save(user);
         audit(adminId, "USER_DELETION_CANCELLED", "USER", userId, requiredReason(reason), sourceIp, Map.of());
     }
@@ -224,14 +225,14 @@ public class AdminConsoleService {
         requireUser(userId); String verifiedReason = requiredReason(reason); Instant now = clock.instant(); UUID id = UUID.randomUUID();
         jdbc.sql("insert into admin_support_grants(id,admin_id,user_id,reason,expires_at,created_at) values (:id,:admin,:user,:reason,:expires,:now)")
                 .param("id", id).param("admin", adminId).param("user", userId).param("reason", verifiedReason)
-                .param("expires", now.plusSeconds(900)).param("now", now).update();
+                .param("expires", timestamp(now.plusSeconds(900))).param("now", timestamp(now)).update();
         audit(adminId, "SUPPORT_ACCESS_GRANTED", "USER", userId, verifiedReason, sourceIp, Map.of("minutes", 15));
         return id;
     }
 
     public boolean supportGrantValid(UUID grantId, long adminId, long userId) {
         return jdbc.sql("select exists(select 1 from admin_support_grants where id=:id and admin_id=:admin and user_id=:user and revoked_at is null and expires_at > :now)")
-                .param("id", grantId).param("admin", adminId).param("user", userId).param("now", clock.instant()).query(Boolean.class).single();
+                .param("id", grantId).param("admin", adminId).param("user", userId).param("now", timestamp(clock.instant())).query(Boolean.class).single();
     }
 
     @Transactional
@@ -254,10 +255,10 @@ public class AdminConsoleService {
         if (users.existsByEmailIgnoreCase(normalizedEmail)) throw new IllegalArgumentException("Email уже используется");
         Instant now = clock.instant(); UUID id = UUID.randomUUID(); String token = randomInvitationToken();
         jdbc.sql("update admin_user_invitations set revoked_at=:now where lower(email)=:email and used_at is null and revoked_at is null")
-                .param("now", now).param("email", normalizedEmail).update();
+                .param("now", timestamp(now)).param("email", normalizedEmail).update();
         jdbc.sql("insert into admin_user_invitations(id,email,role,token_hash,created_by_admin_id,created_at,expires_at) values (:id,:email,:role,:hash,:admin,:now,:expires)")
                 .param("id", id).param("email", normalizedEmail).param("role", role.name()).param("hash", sha256(token))
-                .param("admin", adminId).param("now", now).param("expires", now.plus(Duration.ofHours(48))).update();
+                .param("admin", adminId).param("now", timestamp(now)).param("expires", timestamp(now.plus(Duration.ofHours(48)))).update();
         String link = baseUrl + "/join/" + token;
         try { mail.sendNotification(normalizedEmail, "Приглашение в RepetHelper", "Вас пригласили в RepetHelper как " + (role == Role.TEACHER ? "преподавателя" : "ученика") + ".\n\nЗавершите регистрацию в течение 48 часов:\n" + link); } catch (MailException ignored) { }
         audit(adminId, "USER_INVITATION_CREATED", "INVITATION", null, requiredReason(reason), sourceIp, Map.of("role", role.name()));
@@ -267,7 +268,7 @@ public class AdminConsoleService {
     public InvitationView invitation(String token) {
         if (token == null || token.length() < 20) throw new NoSuchElementException("Приглашение не найдено");
         return jdbc.sql("select id,email,role,expires_at from admin_user_invitations where token_hash=:hash and used_at is null and revoked_at is null and expires_at > :now")
-                .param("hash", sha256(token)).param("now", clock.instant()).query((rs, row) -> new InvitationView(
+                .param("hash", sha256(token)).param("now", timestamp(clock.instant())).query((rs, row) -> new InvitationView(
                         (UUID) rs.getObject("id"), rs.getString("email"), Role.valueOf(rs.getString("role")), rs.getTimestamp("expires_at").toInstant())).optional()
                 .orElseThrow(() -> new NoSuchElementException("Приглашение не найдено или истекло"));
     }
@@ -275,7 +276,7 @@ public class AdminConsoleService {
     @Transactional
     public void consumeInvitation(String token, UUID invitationId) {
         int updated = jdbc.sql("update admin_user_invitations set used_at=:now where id=:id and token_hash=:hash and used_at is null and revoked_at is null and expires_at > :now")
-                .param("now", clock.instant()).param("id", invitationId).param("hash", sha256(token)).update();
+                .param("now", timestamp(clock.instant())).param("id", invitationId).param("hash", sha256(token)).update();
         if (updated != 1) throw new IllegalArgumentException("Приглашение уже использовано или истекло");
     }
 
@@ -301,7 +302,7 @@ public class AdminConsoleService {
         if (user.getLastActivityAt() != null && user.getLastActivityAt().plusSeconds(60).isAfter(now)) return;
         user.recordActivity(now); users.save(user);
         jdbc.sql("insert into product_activity_events(user_id,event_type,occurred_at) values (:user,:type,:now)")
-                .param("user", user.getId()).param("type", eventType).param("now", now).update();
+                .param("user", user.getId()).param("type", eventType).param("now", timestamp(now)).update();
     }
 
     public void recordLogin(User user) { user.recordLogin(); users.save(user); recordActivity(user, "LOGIN"); }
@@ -312,7 +313,7 @@ public class AdminConsoleService {
         Instant now = clock.instant().truncatedTo(java.time.temporal.ChronoUnit.MINUTES);
         long online = count("select count(*) from app_users where last_activity_at >= :from", Map.of("from", now.minus(Duration.ofMinutes(5))));
         jdbc.sql("insert into product_online_samples(sampled_at,online_users) values (:at,:online) on conflict(sampled_at) do update set online_users=excluded.online_users")
-                .param("at", now).param("online", (int) online).update();
+                .param("at", timestamp(now)).param("online", (int) online).update();
     }
 
     @Transactional
@@ -321,24 +322,24 @@ public class AdminConsoleService {
         LocalDate day = LocalDate.now(ZoneId.of("Europe/Moscow")); Instant now = clock.instant();
         String fingerprint = dailyFingerprint(day, ip, userAgent == null ? "" : userAgent);
         int inserted = jdbc.sql("insert into anonymous_visit_fingerprints(fingerprint_hash,visit_day,expires_at,created_at) values (:hash,:day,:expires,:now) on conflict(fingerprint_hash,visit_day) do nothing")
-                .param("hash", fingerprint).param("day", day).param("expires", now.plus(Duration.ofHours(48))).param("now", now).update();
+                .param("hash", fingerprint).param("day", day).param("expires", timestamp(now.plus(Duration.ofHours(48)))).param("now", timestamp(now)).update();
         jdbc.sql("insert into product_daily_metrics(metric_day,page_views,anonymous_uniques,updated_at) values (:day,1,:unique,:now) on conflict(metric_day) do update set page_views=product_daily_metrics.page_views+1,anonymous_uniques=product_daily_metrics.anonymous_uniques+:unique,updated_at=:now")
-                .param("day", day).param("unique", inserted).param("now", now).update();
+                .param("day", day).param("unique", inserted).param("now", timestamp(now)).update();
     }
 
     @Transactional
     public void cleanupMetrics() {
         if (!metricsEnabled) return;
         Instant now = clock.instant();
-        jdbc.sql("delete from anonymous_visit_fingerprints where expires_at < :now").param("now", now).update();
-        jdbc.sql("delete from product_activity_events where occurred_at < :cutoff").param("cutoff", now.minus(Duration.ofDays(90))).update();
-        jdbc.sql("delete from product_online_samples where sampled_at < :cutoff").param("cutoff", now.minus(Duration.ofDays(30))).update();
+        jdbc.sql("delete from anonymous_visit_fingerprints where expires_at < :now").param("now", timestamp(now)).update();
+        jdbc.sql("delete from product_activity_events where occurred_at < :cutoff").param("cutoff", timestamp(now.minus(Duration.ofDays(90)))).update();
+        jdbc.sql("delete from product_online_samples where sampled_at < :cutoff").param("cutoff", timestamp(now.minus(Duration.ofDays(30)))).update();
     }
 
     @Transactional
     public int purgeDueUsers() {
         List<Long> due = jdbc.sql("select id from app_users where deletion_scheduled_at <= :now and deletion_completed_at is null order by id for update skip locked")
-                .param("now", clock.instant()).query(Long.class).list();
+                .param("now", timestamp(clock.instant())).query(Long.class).list();
         for (Long userId : due) purgeUser(userId);
         return due.size();
     }
@@ -347,10 +348,10 @@ public class AdminConsoleService {
     public void expireRestrictions() {
         Instant now = clock.instant();
         List<Long> affected = jdbc.sql("select distinct user_id from user_account_restrictions where lifted_at is null and ends_at <= :now")
-                .param("now", now).query(Long.class).list();
+                .param("now", timestamp(now)).query(Long.class).list();
         if (affected.isEmpty()) return;
         jdbc.sql("update user_account_restrictions set lifted_at=:now where lifted_at is null and ends_at <= :now")
-                .param("now", now).update();
+                .param("now", timestamp(now)).update();
         for (Long userId : affected) {
             User user = users.findById(userId).orElse(null);
             if (user != null && user.getDeletionScheduledAt() == null) { user.setEnabled(true); user.invalidateSessions(); }
@@ -377,7 +378,7 @@ public class AdminConsoleService {
         jdbc.sql("update product_activity_events set user_id=null where user_id=:id").param("id", userId).update();
         String tombstone = "deleted-" + userId + "-" + UUID.randomUUID().toString().substring(0, 8);
         jdbc.sql("update app_users set username=:username,email=null,password_hash=null,display_name='Удалённый пользователь',enabled=false,auth_version=auth_version+1,deletion_completed_at=:now,deletion_scheduled_at=null,must_change_password=false where id=:id")
-                .param("username", tombstone).param("now", clock.instant()).param("id", userId).update();
+                .param("username", tombstone).param("now", timestamp(clock.instant())).param("id", userId).update();
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override public void afterCommit() { deleteStored(attachments, storageRoot); deleteStored(images, storageRoot.resolve("boards")); }
         });
@@ -399,13 +400,14 @@ public class AdminConsoleService {
         jdbc.sql("insert into admin_audit_log(admin_id,action,target_type,target_id,reason,request_id,source_ip,details,created_at) values (:admin,:action,:type,:target,:reason,:request,:ip,cast(:details as jsonb),:now)")
                 .param("admin", adminId).param("action", action).param("type", targetType).param("target", targetId)
                 .param("reason", blankToNull(reason)).param("request", UUID.randomUUID()).param("ip", blankToNull(sourceIp))
-                .param("details", "{}").param("now", clock.instant()).update();
+                .param("details", "{}").param("now", timestamp(clock.instant())).update();
     }
 
     private long count(String sql) { return jdbc.sql(sql).query(Long.class).single(); }
-    private long count(String sql, Map<String, ?> params) { var statement = jdbc.sql(sql); for (var entry : params.entrySet()) statement = statement.param(entry.getKey(), entry.getValue()); return statement.query(Long.class).single(); }
+    private long count(String sql, Map<String, ?> params) { var statement = jdbc.sql(sql); for (var entry : params.entrySet()) statement = statement.param(entry.getKey(), entry.getValue() instanceof Instant instant ? timestamp(instant) : entry.getValue()); return statement.query(Long.class).single(); }
     private void validateAdmin(String username, String password) { if (!normalized(username).matches("[a-z0-9._-]{3,40}")) throw new IllegalArgumentException("Некорректный логин"); if (password == null || password.length() < 14 || password.getBytes(StandardCharsets.UTF_8).length > 72) throw new IllegalArgumentException("Пароль администратора должен содержать 14–72 байта"); if (encryptionKey.length() < 32) throw new IllegalStateException("Не настроен ключ шифрования TOTP"); }
-    private List<String> createRecoveryCodes(long id, Instant now) { List<String> result = new ArrayList<>(); for (int item = 0; item < 10; item++) { String code = randomCode(); result.add(code); jdbc.sql("insert into admin_recovery_codes(admin_id,code_hash,created_at) values (:admin,:hash,:now)").param("admin", id).param("hash", encoder.encode(code)).param("now", now).update(); } return result; }
+    private List<String> createRecoveryCodes(long id, Instant now) { List<String> result = new ArrayList<>(); for (int item = 0; item < 10; item++) { String code = randomCode(); result.add(code); jdbc.sql("insert into admin_recovery_codes(admin_id,code_hash,created_at) values (:admin,:hash,:now)").param("admin", id).param("hash", encoder.encode(code)).param("now", timestamp(now)).update(); } return result; }
+    private Timestamp timestamp(Instant value) { return value == null ? null : Timestamp.from(value); }
     private String randomCode() { byte[] value = new byte[8]; RANDOM.nextBytes(value); return Base64.getUrlEncoder().withoutPadding().encodeToString(value).toUpperCase(Locale.ROOT); }
     private String randomTemporaryPassword() { byte[] value = new byte[18]; RANDOM.nextBytes(value); return "Rh-" + Base64.getUrlEncoder().withoutPadding().encodeToString(value); }
     private String randomInvitationToken() { byte[] value = new byte[32]; RANDOM.nextBytes(value); return Base64.getUrlEncoder().withoutPadding().encodeToString(value); }

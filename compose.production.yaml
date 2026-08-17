@@ -94,9 +94,11 @@ services:
       SITE_DOMAIN: ${SITE_DOMAIN:?Set SITE_DOMAIN in .env.production}
       ADMIN_GATEWAY_SECRET: ${APP_ADMIN_GATEWAY_SECRET:-}
     ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
+      # Tailscale Serve owns HTTPS on the tailnet interface. Keep Caddy on
+      # the public interface so both listeners can safely use port 443.
+      - "${PUBLIC_BIND_IP:-0.0.0.0}:80:80"
+      - "${PUBLIC_BIND_IP:-0.0.0.0}:443:443"
+      - "${PUBLIC_BIND_IP:-0.0.0.0}:443:443/udp"
       - "127.0.0.1:8081:8081"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
