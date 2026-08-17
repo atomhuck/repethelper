@@ -30,7 +30,7 @@
 :8081 {
 	@control path /control /control/*
 	handle @control {
-		header X-RepetHelper-Admin-Gateway "{$ADMIN_GATEWAY_SECRET}"
+		request_header X-RepetHelper-Admin-Gateway "{$ADMIN_GATEWAY_SECRET}"
 		reverse_proxy app:8080
 	}
 	respond 404
