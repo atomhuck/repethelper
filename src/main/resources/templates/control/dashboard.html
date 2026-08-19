@@ -1,1 +1,23 @@
-<!doctype html><html lang="ru" xmlns:th="http://www.thymeleaf.org"><head th:replace="~{fragments :: head('Панель управления')}"></head><body><header class="topbar"><a class="brand" th:href="@{/control}"><img th:src="@{/brand/repethelper-mark.svg}" alt=""><span>RepetHelper Control</span></a><nav class="nav-links"><a class="active" th:href="@{/control}">Обзор</a><a th:href="@{/control/users}">Пользователи</a></nav><form method="post" th:action="@{/control/sign-out}"><button class="button ghost" type="submit">Выйти</button></form></header><main class="page-shell"><section class="page-heading"><p class="eyebrow">Закрытый контур</p><h1>Обзор сервиса</h1><p class="muted" th:text="'Администратор: ' + ${admin.username}"></p></section><section class="stat-grid"><article class="panel stat"><span>Всего аккаунтов</span><strong th:text="${dashboard.totalUsers}"></strong><small th:text="'Преподавателей: ' + ${dashboard.teachers} + ' · учеников: ' + ${dashboard.students}"></small></article><article class="panel stat"><span>Онлайн сейчас</span><strong th:text="${dashboard.onlineNow}"></strong><small th:text="'Пик сегодня: ' + ${dashboard.peakOnlineToday}"></small></article><article class="panel stat"><span>Активность</span><strong th:text="${dashboard.dau}"></strong><small th:text="'DAU · WAU: ' + ${dashboard.wau} + ' · MAU: ' + ${dashboard.mau}"></small></article><article class="panel stat"><span>Новые сегодня</span><strong th:text="${dashboard.registrationsToday}"></strong><small th:text="'Занятий: ' + ${dashboard.lessons}"></small></article><article class="panel stat"><span>Аккаунты</span><strong th:text="${dashboard.activeUsers}"></strong><small th:text="'Отключено: ' + ${dashboard.disabledUsers} + ' · удаление: ' + ${dashboard.pendingDeletion}"></small></article><article class="panel stat"><span>Очередь почты</span><strong th:text="${dashboard.pendingEmails}"></strong><small th:text="'Ошибок: ' + ${dashboard.failedEmails}"></small></article></section><section class="panel"><h2>Состояние продукта</h2><p class="muted" th:text="'Активных связей преподаватель–ученик: ' + ${dashboard.activeConnections}"></p><a class="button primary" th:href="@{/control/users}">Открыть пользователей</a></section></main></body></html>
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Панель управления')}"></head>
+<body class="control-page">
+<header class="topbar">
+    <a class="brand" th:href="@{/control}"><img th:src="@{/brand/repethelper-mark.svg}" alt=""><span>RepetHelper Control</span></a>
+    <nav class="nav-links"><a class="active" th:href="@{/control}">Обзор</a><a th:href="@{/control/users}">Пользователи</a></nav>
+    <form method="post" th:action="@{/control/sign-out}"><button class="button ghost" type="submit">Выйти</button></form>
+</header>
+<main class="page-shell">
+    <section class="page-heading"><p class="eyebrow">Закрытый контур</p><h1>Обзор сервиса</h1><p class="muted" th:text="'Администратор: ' + ${admin.username}"></p></section>
+    <section class="control-stat-grid">
+        <article class="panel control-stat"><span>Всего аккаунтов</span><strong th:text="${dashboard.totalUsers}"></strong><small th:text="'Преподавателей: ' + ${dashboard.teachers} + ' · учеников: ' + ${dashboard.students}"></small></article>
+        <article class="panel control-stat"><span>Онлайн сейчас</span><strong th:text="${dashboard.onlineNow}"></strong><small th:text="'Пик сегодня: ' + ${dashboard.peakOnlineToday}"></small></article>
+        <article class="panel control-stat"><span>Активность</span><strong th:text="${dashboard.dau}"></strong><small th:text="'DAU · WAU: ' + ${dashboard.wau} + ' · MAU: ' + ${dashboard.mau}"></small></article>
+        <article class="panel control-stat"><span>Новые сегодня</span><strong th:text="${dashboard.registrationsToday}"></strong><small th:text="'Занятий: ' + ${dashboard.lessons}"></small></article>
+        <article class="panel control-stat"><span>Аккаунты</span><strong th:text="${dashboard.activeUsers}"></strong><small th:text="'Отключено: ' + ${dashboard.disabledUsers} + ' · удаление: ' + ${dashboard.pendingDeletion}"></small></article>
+        <article class="panel control-stat"><span>Очередь почты</span><strong th:text="${dashboard.pendingEmails}"></strong><small th:text="'Ошибок: ' + ${dashboard.failedEmails}"></small></article>
+    </section>
+    <section class="panel"><h2>Состояние продукта</h2><p class="muted" th:text="'Активных связей преподаватель–ученик: ' + ${dashboard.activeConnections}"></p><a class="button primary" th:href="@{/control/users}">Открыть пользователей</a></section>
+</main>
+</body>
+</html>
