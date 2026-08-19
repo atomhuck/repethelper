@@ -38,7 +38,13 @@
 	@control path /control /control/*
 	handle @control {
 		request_header X-RepetHelper-Admin-Gateway "{$ADMIN_GATEWAY_SECRET}"
-		reverse_proxy app:8080
+		reverse_proxy app:8080 {
+			# Tailscale terminates TLS before this loopback hop. Preserve the
+			# original secure request context for redirects and session handling.
+			header_up X-Forwarded-Proto https
+			header_up X-Forwarded-Host {http.request.host}
+			header_up X-Forwarded-Port 443
+		}
 	}
 	respond 404
 }
