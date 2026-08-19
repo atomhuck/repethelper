@@ -2,13 +2,20 @@
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments :: head('Панель управления')}"></head>
 <body class="control-page">
-<header class="topbar">
+<header class="topbar control-topbar">
     <a class="brand" th:href="@{/control}"><img th:src="@{/brand/repethelper-mark.svg}" alt=""><span>RepetHelper Control</span></a>
     <nav class="nav-links"><a class="active" th:href="@{/control}">Обзор</a><a th:href="@{/control/users}">Пользователи</a></nav>
     <form method="post" th:action="@{/control/sign-out}"><button class="button ghost" type="submit">Выйти</button></form>
 </header>
-<main class="page-shell">
-    <section class="page-heading"><p class="eyebrow">Закрытый контур</p><h1>Обзор сервиса</h1><p class="muted" th:text="'Администратор: ' + ${admin.username}"></p></section>
+<main class="page-shell control-shell">
+    <section class="control-page-title control-dashboard-title">
+        <div>
+            <p class="eyebrow">Закрытый контур</p>
+            <h1>Обзор сервиса</h1>
+            <p th:text="'Администратор: ' + ${admin.username}"></p>
+        </div>
+        <span class="control-count">Данные обновляются автоматически</span>
+    </section>
     <section class="control-stat-grid">
         <article class="panel control-stat"><span>Всего аккаунтов</span><strong th:text="${dashboard.totalUsers}"></strong><small th:text="'Преподавателей: ' + ${dashboard.teachers} + ' · учеников: ' + ${dashboard.students}"></small></article>
         <article class="panel control-stat"><span>Онлайн сейчас</span><strong th:text="${dashboard.onlineNow}"></strong><small th:text="'Пик сегодня: ' + ${dashboard.peakOnlineToday}"></small></article>
@@ -17,7 +24,10 @@
         <article class="panel control-stat"><span>Аккаунты</span><strong th:text="${dashboard.activeUsers}"></strong><small th:text="'Отключено: ' + ${dashboard.disabledUsers} + ' · удаление: ' + ${dashboard.pendingDeletion}"></small></article>
         <article class="panel control-stat"><span>Очередь почты</span><strong th:text="${dashboard.pendingEmails}"></strong><small th:text="'Ошибок: ' + ${dashboard.failedEmails}"></small></article>
     </section>
-    <section class="panel"><h2>Состояние продукта</h2><p class="muted" th:text="'Активных связей преподаватель–ученик: ' + ${dashboard.activeConnections}"></p><a class="button primary" th:href="@{/control/users}">Открыть пользователей</a></section>
+    <section class="panel control-product-state">
+        <div><p class="eyebrow">Состояние продукта</p><h2>Связи преподавателей и учеников</h2><p th:text="'Сейчас активны ' + ${dashboard.activeConnections} + ' связи'">Сейчас активны 0 связей</p></div>
+        <a class="button primary" th:href="@{/control/users}">Открыть пользователей</a>
+    </section>
 </main>
 </body>
 </html>
