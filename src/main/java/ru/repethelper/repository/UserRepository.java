@@ -23,7 +23,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
                    or (:state = 'blocked' and u.enabled = false and u.deletionScheduledAt is null)
                    or (:state = 'deleting' and u.deletionScheduledAt is not null))
               and (:q is null or :q = '' or str(u.id) = :q
-                   or lower(u.username) like lower(concat('%', :q, '%'))
                    or lower(u.displayName) like lower(concat('%', :q, '%'))
                    or lower(coalesce(u.email, '')) like lower(concat('%', :q, '%')))
             """)

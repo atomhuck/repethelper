@@ -8,10 +8,6 @@ public class RegistrationForm {
     @NotBlank(message = "Введите имя и фамилию")
     @Size(min = 2, max = 80, message = "Имя должно содержать от 2 до 80 символов")
     private String displayName;
-    @NotBlank(message = "Введите логин")
-    @Pattern(regexp = "^[A-Za-z0-9._-]{3,40}$",
-            message = "Логин: 3–40 латинских букв, цифр или символов . _ -")
-    private String username;
     @NotBlank(message = "Введите email") @Email(message = "Введите корректный email")
     @Size(max = 254, message = "Email слишком длинный")
     private String email;
@@ -37,8 +33,6 @@ public class RegistrationForm {
     }
     public String getDisplayName() { return displayName; }
     public void setDisplayName(String displayName) { this.displayName = displayName; }
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
     public Role getRole() { return role; }

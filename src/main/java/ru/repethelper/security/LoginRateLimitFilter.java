@@ -13,7 +13,7 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
     @Override protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                                FilterChain chain) throws ServletException, IOException {
         if ("POST".equalsIgnoreCase(request.getMethod()) && "/login".equals(request.getRequestURI())
-                && !attempts.loginAllowed(request.getParameter("username"), request.getRemoteAddr())) {
+                && !attempts.loginAllowed(request.getParameter("email"), request.getRemoteAddr())) {
             response.sendRedirect("/login?rate");
             return;
         }

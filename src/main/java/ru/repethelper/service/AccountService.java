@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Locale;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 @Service
@@ -44,6 +45,12 @@ public class AccountService implements UserDetailsService {
     @Transactional
     public User registerStudent(String displayName, String username, String password) {
         return register(displayName, username, null, password, Role.STUDENT, false);
+    }
+
+    @Transactional
+    public User registerGenerated(String displayName, String email, String password,
+                                  Role role, boolean legalAccepted) {
+        return register(displayName, generateInternalUsername(), email, password, role, legalAccepted);
     }
 
     @Transactional
@@ -178,6 +185,14 @@ public class AccountService implements UserDetailsService {
             if (profiles.findByInviteCodeIgnoreCase(code).isEmpty()) return code;
         }
         throw new IllegalStateException("Не удалось создать уникальный код приглашения");
+    }
+
+    private String generateInternalUsername() {
+        for (int attempt = 0; attempt < 20; attempt++) {
+            String candidate = "usr_" + UUID.randomUUID().toString().replace("-", "");
+            if (!users.existsByUsernameIgnoreCase(candidate)) return candidate;
+        }
+        throw new IllegalStateException("Не удалось создать уникальный технический идентификатор");
     }
 
     private void validateRegistrationFields(String displayName, String normalizedUsername, String normalizedEmail,

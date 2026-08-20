@@ -11,7 +11,7 @@
         <div th:if="${pending.empty}" class="empty compact"><p>Новых запросов нет</p></div>
         <div th:each="request : ${pending}" class="person-row">
             <span class="avatar" th:text="${#strings.substring(request.student.displayName,0,1)}">А</span>
-            <div><b th:text="${request.student.displayName}">Ученик</b><small th:text="${'@' + request.student.username}">@login</small></div>
+            <div><b th:text="${request.student.displayName}">Ученик</b><small>Новая заявка</small></div>
             <div class="row-actions"><form th:action="@{/teacher/requests/{id}/reject(id=${request.id})}" method="post"><button class="button ghost" type="submit">Отклонить</button></form><form th:action="@{/teacher/requests/{id}/accept(id=${request.id})}" method="post"><button class="button primary" type="submit">Принять</button></form></div>
         </div>
     </section>
@@ -21,7 +21,7 @@
         <div th:each="student : ${students}" class="person-row student-person-row">
             <a class="student-person-link" th:href="@{/teacher/students/{id}(id=${student.id})}">
                 <span class="avatar cyan" th:text="${#strings.substring(student.displayName,0,1)}">А</span>
-                <span class="student-person-copy"><b th:text="${student.displayName}">Ученик</b><small th:text="${'@' + student.username}">@login</small></span>
+                <span class="student-person-copy"><b th:text="${student.displayName}">Ученик</b><small>Подключён к вам</small></span>
             </a>
             <div class="row-actions student-row-actions">
                 <a class="button primary compact" th:href="@{/teacher/students/{id}(id=${student.id})}">

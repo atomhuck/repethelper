@@ -38,7 +38,7 @@ public class AdminInvitationController {
         form.setEmail(invitation.email()); form.setRole(invitation.role());
         if (errors.hasErrors()) { model.addAttribute("invitation", invitation); model.addAttribute("token", token); return "admin-invite-register"; }
         try {
-            User user = accounts.register(form.getDisplayName(), form.getUsername(), invitation.email(), form.getPassword(), invitation.role(), true);
+            User user = accounts.registerGenerated(form.getDisplayName(), invitation.email(), form.getPassword(), invitation.role(), true);
             admins.consumeInvitation(token, invitation.id());
             try { mail.sendVerification(user.getEmail(), tokens.createVerification(user)); } catch (MailException ignored) { }
             flash.addFlashAttribute("success", "Аккаунт создан. Войдите и подтвердите email кодом из письма.");

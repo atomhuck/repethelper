@@ -8,9 +8,9 @@
     <div th:if="${success}" class="alert success" th:text="${success}"></div>
     <div th:if="${error}" class="alert error" th:text="${error}"></div>
     <section class="panel stack-form security-card">
-        <div class="security-card-heading"><span class="security-card-icon"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#lock}"></use></svg></span><div><p class="eyebrow">Пароль</p><h2>Вход по логину или email</h2></div></div>
+        <div class="security-card-heading"><span class="security-card-icon"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#lock}"></use></svg></span><div><p class="eyebrow">Пароль</p><h2>Вход по email</h2></div></div>
         <p th:if="${user.hasPassword()}">Пароль настроен. Его можно изменить через восстановление пароля.</p>
-        <p th:unless="${user.hasPassword()}">Этот аккаунт создан через VK. Вход по логину, email и паролю для него недоступен.</p>
+        <p th:unless="${user.hasPassword()}">Этот аккаунт создан через VK. Вход по email и паролю для него недоступен.</p>
     </section>
     <section class="panel stack-form security-card">
         <div class="security-card-heading"><span class="security-card-icon vk">VK</span><div><p class="eyebrow">Социальная сеть</p><h2>VK ID</h2></div></div>

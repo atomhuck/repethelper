@@ -162,17 +162,14 @@ public class AdminConsoleService {
     }
 
     @Transactional
-    public void editUser(long adminId, long userId, String displayName, String username, String email, String sourceIp, String reason) {
+    public void editUser(long adminId, long userId, String displayName, String email, String sourceIp, String reason) {
         User user = requireUser(userId);
-        String normalizedUsername = normalized(username);
         String normalizedEmail = normalized(email);
         if (displayName == null || displayName.trim().length() < 2 || displayName.trim().length() > 80) throw new IllegalArgumentException("Имя: от 2 до 80 символов");
-        if (!normalizedUsername.matches("[a-z0-9._-]{3,40}")) throw new IllegalArgumentException("Некорректный логин");
         if (!normalizedEmail.matches("[^\\s@]+@[^\\s@]+\\.[^\\s@]+") || normalizedEmail.length() > 254) throw new IllegalArgumentException("Некорректный email");
-        users.findByUsernameIgnoreCase(normalizedUsername).filter(found -> !found.getId().equals(userId)).ifPresent(found -> { throw new IllegalArgumentException("Логин уже занят"); });
         users.findByEmailIgnoreCase(normalizedEmail).filter(found -> !found.getId().equals(userId)).ifPresent(found -> { throw new IllegalArgumentException("Email уже используется"); });
-        Map<String, Object> before = Map.of("username", user.getUsername(), "email", Objects.toString(user.getEmail(), ""));
-        user.setDisplayName(displayName.trim()); user.setUsername(normalizedUsername); user.setEmail(normalizedEmail); user.invalidateSessions();
+        Map<String, Object> before = Map.of("email", Objects.toString(user.getEmail(), ""));
+        user.setDisplayName(displayName.trim()); user.setEmail(normalizedEmail); user.invalidateSessions();
         users.save(user);
         audit(adminId, "USER_PROFILE_UPDATED", "USER", userId, requiredReason(reason), sourceIp, before);
     }
@@ -236,11 +233,11 @@ public class AdminConsoleService {
     }
 
     @Transactional
-    public ManualUserResult createManualUser(long adminId, Role role, String displayName, String username, String email,
+    public ManualUserResult createManualUser(long adminId, Role role, String displayName, String email,
                                              String sourceIp, String reason) {
         if (role == null) throw new IllegalArgumentException("Выберите роль");
         String temporaryPassword = randomTemporaryPassword();
-        User user = accounts.register(displayName, username, email, temporaryPassword, role, false);
+        User user = accounts.registerGenerated(displayName, email, temporaryPassword, role, false);
         user.setMustChangePassword(true); users.save(user);
         try { mail.sendVerification(user.getEmail(), tokens.createVerification(user)); } catch (MailException ignored) { }
         audit(adminId, "USER_CREATED_MANUALLY", "USER", user.getId(), requiredReason(reason), sourceIp, Map.of("role", role.name()));

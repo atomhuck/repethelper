@@ -118,12 +118,12 @@ public class AdminConsoleController {
     }
 
     @PostMapping("/users/create")
-    String createUser(@RequestParam Role role, @RequestParam String displayName, @RequestParam String username,
+    String createUser(@RequestParam Role role, @RequestParam String displayName,
                       @RequestParam String email, @RequestParam String reason, HttpServletRequest request,
                       RedirectAttributes flash) {
         if (!requireRecent(request, flash)) return "redirect:/control/reauth";
         try {
-            var created = admins.createManualUser(admin(request).id(), role, displayName, username, email, request.getRemoteAddr(), reason);
+            var created = admins.createManualUser(admin(request).id(), role, displayName, email, request.getRemoteAddr(), reason);
             flash.addFlashAttribute("success", "Аккаунт создан. Временный пароль показан один раз.");
             flash.addFlashAttribute("temporaryPassword", created.temporaryPassword());
         } catch (IllegalArgumentException ex) { flash.addFlashAttribute("error", ex.getMessage()); }
@@ -149,10 +149,10 @@ public class AdminConsoleController {
     }
 
     @PostMapping("/users/{id}/profile")
-    String profile(@PathVariable long id, @RequestParam String displayName, @RequestParam String username, @RequestParam String email,
+    String profile(@PathVariable long id, @RequestParam String displayName, @RequestParam String email,
                    @RequestParam String reason, HttpServletRequest request, RedirectAttributes flash) {
         if (!requireRecent(request, flash)) return "redirect:/control/reauth";
-        try { admins.editUser(admin(request).id(), id, displayName, username, email, request.getRemoteAddr(), reason); flash.addFlashAttribute("success", "Профиль обновлён, прежние сессии завершены"); }
+        try { admins.editUser(admin(request).id(), id, displayName, email, request.getRemoteAddr(), reason); flash.addFlashAttribute("success", "Профиль обновлён, прежние сессии завершены"); }
         catch (IllegalArgumentException ex) { flash.addFlashAttribute("error", ex.getMessage()); }
         return "redirect:/control/users/" + id;
     }

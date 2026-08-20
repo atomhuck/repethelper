@@ -32,7 +32,6 @@
             </fieldset>
             <small class="field-error" th:errors="*{role}"></small>
             <label>Имя и фамилия<input th:field="*{displayName}" autocomplete="name" required placeholder="Алексей Смирнов"><small th:errors="*{displayName}"></small></label>
-            <label>Логин<input th:field="*{username}" autocomplete="username" required placeholder="alex_sm"><small th:errors="*{username}"></small></label>
             <label>Email<input type="email" th:field="*{email}" autocomplete="email" required placeholder="name@example.ru"><small th:errors="*{email}"></small></label>
             <label>Пароль<input type="password" th:field="*{password}" autocomplete="new-password" required placeholder="Минимум 10 символов"><small th:errors="*{password}"></small></label>
             <label>Повторите пароль<input type="password" th:field="*{passwordConfirmation}" autocomplete="new-password" required><small th:errors="*{passwordConfirmation}"></small></label>

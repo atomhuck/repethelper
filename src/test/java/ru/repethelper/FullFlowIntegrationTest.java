@@ -81,17 +81,27 @@ class FullFlowIntegrationTest {
         mvc.perform(get("/actuator/health"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("UP"));
-        mvc.perform(get("/login")).andExpect(status().isOk());
+        mvc.perform(get("/login"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("type=\"email\" name=\"email\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Логин или email"))));
+        mvc.perform(get("/register"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("name=\"username\""))));
         mvc.perform(get("/fonts/Onest-Variable.woff2")).andExpect(status().isOk());
         mvc.perform(get("/teacher")).andExpect(status().is3xxRedirection());
         mvc.perform(get("/teacher").with(user("student").roles("STUDENT"))).andExpect(status().isForbidden());
         mvc.perform(post("/register").with(csrf())
-                .param("displayName", "Новый Ученик").param("username", "new_student")
+                .param("displayName", "Новый Ученик")
                 .param("email", "new.student@example.test").param("password", "password123")
                 .param("passwordConfirmation", "password123").param("role", "STUDENT")
                 .param("termsAccepted", "true").param("personalDataAccepted", "true"))
                 .andExpect(status().is3xxRedirection()).andExpect(redirectedUrl("/verify-email/pending?welcome"));
-        assertThat(users.findByUsernameIgnoreCase("new_student")).isPresent();
+        User registered = users.findByEmailIgnoreCase("new.student@example.test").orElseThrow();
+        assertThat(registered.getUsername()).matches("usr_[0-9a-f]{32}");
+        User another = accounts.registerGenerated("Другой Ученик", "another.student@example.test",
+                "password123", Role.STUDENT, true);
+        assertThat(another.getUsername()).isNotEqualTo(registered.getUsername());
     }
 
     @Test
@@ -128,7 +138,7 @@ class FullFlowIntegrationTest {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Привет, Ефим Ефимов!")));
 
         mvc.perform(post("/login").with(csrf())
-                        .param("username", user.getEmail()).param("password", "AnyPassword123"))
+                        .param("email", user.getEmail()).param("password", "AnyPassword123"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/login?error"));
     }
@@ -388,7 +398,7 @@ class FullFlowIntegrationTest {
         User legacy = accounts.registerStudent("Старый пользователь", "legacy_auth_flow", "LegacyPassword123");
 
         var firstLogin = mvc.perform(post("/login").with(csrf())
-                        .param("username", "legacy_auth_flow").param("password", "LegacyPassword123"))
+                        .param("email", "legacy_auth_flow").param("password", "LegacyPassword123"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/account/consent"))
                 .andReturn();
@@ -411,7 +421,7 @@ class FullFlowIntegrationTest {
                 .andExpect(status().is3xxRedirection());
 
         var secondLogin = mvc.perform(post("/login").with(csrf())
-                        .param("username", "LEGACY.AUTH@EXAMPLE.TEST").param("password", "LegacyPassword123"))
+                        .param("email", "LEGACY.AUTH@EXAMPLE.TEST").param("password", "LegacyPassword123"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/verify-email/pending"))
                 .andReturn();
@@ -425,7 +435,7 @@ class FullFlowIntegrationTest {
         mvc.perform(post("/logout").session(resumedSession).with(csrf()))
                 .andExpect(status().is3xxRedirection());
         mvc.perform(post("/login").with(csrf())
-                        .param("username", "legacy_auth_flow").param("password", "LegacyPassword123"))
+                        .param("email", "legacy_auth_flow").param("password", "LegacyPassword123"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/student"));
     }
@@ -434,7 +444,6 @@ class FullFlowIntegrationTest {
     void newRegistrationCanBeInterruptedAndResumedAtEmailCodeStep() throws Exception {
         var registration = mvc.perform(post("/register").with(csrf())
                         .param("displayName", "Новый пользователь")
-                        .param("username", "interrupted_registration")
                         .param("email", "interrupted@example.test")
                         .param("password", "RegistrationPassword123")
                         .param("passwordConfirmation", "RegistrationPassword123")
@@ -445,13 +454,13 @@ class FullFlowIntegrationTest {
                 .andExpect(redirectedUrl("/verify-email/pending?welcome"))
                 .andReturn();
         MockHttpSession session = (MockHttpSession) registration.getRequest().getSession(false);
-        User user = accounts.requireByUsername("interrupted_registration");
+        User user = users.findByEmailIgnoreCase("interrupted@example.test").orElseThrow();
         String code = accountTokens.createVerification(user);
 
         mvc.perform(post("/logout").session(session).with(csrf()))
                 .andExpect(status().is3xxRedirection());
         var login = mvc.perform(post("/login").with(csrf())
-                        .param("username", "interrupted_registration")
+                        .param("email", "interrupted@example.test")
                         .param("password", "RegistrationPassword123"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/verify-email/pending"))

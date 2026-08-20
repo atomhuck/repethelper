@@ -43,7 +43,7 @@ public class AuthController {
                     HttpServletRequest request) {
         if (errors.hasErrors()) return "register";
         try {
-            User user = accounts.register(form.getDisplayName(), form.getUsername(), form.getEmail(),
+            User user = accounts.registerGenerated(form.getDisplayName(), form.getEmail(),
                     form.getPassword(), form.getRole(), true);
             authenticate(user, request);
             safeSendVerification(user);
@@ -216,7 +216,7 @@ public class AuthController {
     @PostMapping("/verify-email/resend")
     String resend(Authentication auth, HttpServletRequest request, RedirectAttributes flash) {
         User user = current(auth);
-        if (!attempts.verificationResendAllowed(user.getUsername(), request.getRemoteAddr())) {
+        if (!attempts.verificationResendAllowed(user.getEmail(), request.getRemoteAddr())) {
             flash.addFlashAttribute("error", "Слишком много запросов. Попробуйте получить новый код позже.");
             return "redirect:/verify-email/pending";
         }

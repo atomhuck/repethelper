@@ -37,7 +37,7 @@ public class SecurityConfig {
             .addFilterAfter(adminSessionFilter, AdminGatewayFilter.class)
             .addFilterAfter(new AccountStateFilter(accounts, accountGateEnabled), UsernamePasswordAuthenticationFilter.class)
             .addFilterAfter(productActivityFilter, AccountStateFilter.class)
-            .formLogin(form -> form.loginPage("/login")
+            .formLogin(form -> form.loginPage("/login").usernameParameter("email")
                 .successHandler((request, response, authentication) -> {
                     attempts.loginSucceeded(authentication.getName());
                     var user = accounts.requireByUsername(authentication.getName());
@@ -54,7 +54,7 @@ public class SecurityConfig {
                     }
                 })
                 .failureHandler((request, response, exception) -> {
-                    attempts.loginFailed(request.getParameter("username"), request.getRemoteAddr());
+                    attempts.loginFailed(request.getParameter("email"), request.getRemoteAddr());
                     response.sendRedirect("/login?error");
                 }).permitAll())
             .exceptionHandling(errors -> errors.accessDeniedHandler((request, response, denied) -> {

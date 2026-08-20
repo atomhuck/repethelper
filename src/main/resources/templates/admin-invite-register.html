@@ -1,1 +1,28 @@
-<!doctype html><html lang="ru" xmlns:th="http://www.thymeleaf.org"><head th:replace="~{fragments :: head('Регистрация по приглашению')}"></head><body class="auth-page"><main class="auth-shell"><section class="auth-form-card"><p class="eyebrow">Приглашение</p><h1>Завершите регистрацию</h1><p class="muted" th:text="'Роль: ' + (${invitation.role.name() == 'TEACHER'} ? 'преподаватель' : 'ученик') + ' · ' + ${invitation.email}"></p><p th:if="${registrationError}" class="flash error" th:text="${registrationError}"></p><form th:action="@{/join/{token}(token=${token})}" th:object="${form}" method="post" class="stack-form"><input type="hidden" th:field="*{email}"><input type="hidden" th:field="*{role}"><label>Имя и фамилия<input th:field="*{displayName}" autocomplete="name" required><small th:errors="*{displayName}"></small></label><label>Логин<input th:field="*{username}" autocomplete="username" required><small th:errors="*{username}"></small></label><label>Пароль<input type="password" th:field="*{password}" autocomplete="new-password" required><small th:errors="*{password}"></small></label><label>Повторите пароль<input type="password" th:field="*{passwordConfirmation}" autocomplete="new-password" required><small th:errors="*{passwordConfirmation}"></small></label><small class="field-error" th:errors="*{passwordLengthValid}"></small><small class="field-error" th:errors="*{passwordConfirmationValid}"></small><label class="legal-check"><input type="checkbox" th:field="*{termsAccepted}"><span>Принимаю <a th:href="@{/legal/terms}" target="_blank">пользовательское соглашение</a></span></label><small class="field-error" th:errors="*{termsAccepted}"></small><label class="legal-check"><input type="checkbox" th:field="*{personalDataAccepted}"><span>Даю согласие на обработку персональных данных</span></label><small class="field-error" th:errors="*{personalDataAccepted}"></small><button class="button primary full" type="submit">Создать аккаунт</button></form></section></main></body></html>
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Регистрация по приглашению')}"></head>
+<body class="auth-page">
+<main class="auth-shell">
+    <section class="auth-form-card">
+        <p class="eyebrow">Приглашение</p>
+        <h1>Завершите регистрацию</h1>
+        <p class="muted" th:text="'Роль: ' + (${invitation.role.name() == 'TEACHER'} ? 'преподаватель' : 'ученик') + ' · ' + ${invitation.email}"></p>
+        <p th:if="${registrationError}" class="flash error" th:text="${registrationError}"></p>
+        <form th:action="@{/join/{token}(token=${token})}" th:object="${form}" method="post" class="stack-form">
+            <input type="hidden" th:field="*{email}">
+            <input type="hidden" th:field="*{role}">
+            <label>Имя и фамилия<input th:field="*{displayName}" autocomplete="name" required><small th:errors="*{displayName}"></small></label>
+            <label>Пароль<input type="password" th:field="*{password}" autocomplete="new-password" required><small th:errors="*{password}"></small></label>
+            <label>Повторите пароль<input type="password" th:field="*{passwordConfirmation}" autocomplete="new-password" required><small th:errors="*{passwordConfirmation}"></small></label>
+            <small class="field-error" th:errors="*{passwordLengthValid}"></small>
+            <small class="field-error" th:errors="*{passwordConfirmationValid}"></small>
+            <label class="legal-check"><input type="checkbox" th:field="*{termsAccepted}"><span>Принимаю <a th:href="@{/legal/terms}" target="_blank">пользовательское соглашение</a></span></label>
+            <small class="field-error" th:errors="*{termsAccepted}"></small>
+            <label class="legal-check"><input type="checkbox" th:field="*{personalDataAccepted}"><span>Даю согласие на обработку персональных данных</span></label>
+            <small class="field-error" th:errors="*{personalDataAccepted}"></small>
+            <button class="button primary full" type="submit">Создать аккаунт</button>
+        </form>
+    </section>
+</main>
+</body>
+</html>

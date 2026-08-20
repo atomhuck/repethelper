@@ -14,9 +14,7 @@
             <div>
                 <p class="eyebrow">Карточка ученика</p>
                 <h1 th:text="${student.displayName}">Ученик</h1>
-                <p><span th:text="${'@' + student.username}">@login</span> · подключён
-                    <span th:text="${@timeView.dateTime(overview.relation.processedAt != null ? overview.relation.processedAt : overview.relation.createdAt)}">1 августа, 12:00</span>
-                </p>
+                <p>Подключён <span th:text="${@timeView.dateTime(overview.relation.processedAt != null ? overview.relation.processedAt : overview.relation.createdAt)}">1 августа, 12:00</span></p>
             </div>
         </div>
         <div class="student-profile-actions">

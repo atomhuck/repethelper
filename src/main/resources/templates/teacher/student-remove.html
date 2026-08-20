@@ -7,7 +7,7 @@
     <header class="page-header"><div><p class="eyebrow">Необратимое действие</p><h1>Удалить ученика</h1><p>Аккаунт ученика сохранится, но все ваши общие данные будут удалены.</p></div></header>
     <div th:if="${error}" class="alert error" th:text="${error}"></div>
     <section class="panel danger-zone stack-form">
-        <div><b th:text="${preview.student.displayName}">Ученик</b><span th:text="${'@' + preview.student.username}">@student</span></div>
+        <div><b th:text="${preview.student.displayName}">Ученик</b><span>Удаление связи и связанных данных</span></div>
         <ul class="removal-summary"><li th:text="${preview.lessonCount + ' занятий'}">0 занятий</li><li th:text="${preview.seriesCount + ' еженедельных серий'}">0 серий</li><li th:text="${preview.attachmentCount + ' файлов'}">0 файлов</li><li th:text="${preview.boardCount + ' досок'}">0 досок</li></ul>
         <p class="danger-hint">Занятия, материалы, доски и история подключений этой пары исчезнут безвозвратно.</p>
         <form th:action="@{/teacher/students/{id}/remove(id=${preview.student.id})}" method="post" class="stack-form">
