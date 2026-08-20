@@ -392,7 +392,7 @@ class WhiteboardIntegrationTest {
                 HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
         Matcher matcher = Pattern.compile("name=\"_csrf\"[^>]*value=\"([^\"]+)\"").matcher(loginPage.body());
         assertThat(matcher.find()).isTrue();
-        String form = "username=" + encode(username)
+        String form = "email=" + encode(username)
                 + "&password=" + encode(password)
                 + "&_csrf=" + encode(matcher.group(1));
         HttpResponse<Void> response = client.send(
