@@ -31,8 +31,8 @@
                 <label class="choice-card"><input type="radio" th:field="*{role}" value="TEACHER"><span><b>Преподаватель</b><small>Ученики и управление занятиями</small></span></label>
             </fieldset>
             <small class="field-error" th:errors="*{role}"></small>
-            <label>Имя и фамилия<input th:field="*{displayName}" autocomplete="name" required placeholder="Алексей Смирнов"><small th:errors="*{displayName}"></small></label>
-            <label>Email<input type="email" th:field="*{email}" autocomplete="email" required placeholder="name@example.ru"><small th:errors="*{email}"></small></label>
+            <label>Имя и фамилия<input th:field="*{displayName}" autocomplete="name" required maxlength="80" placeholder="Алексей Смирнов" aria-describedby="name-help name-error"><span id="name-help" class="field-help">Два слова без отчества. Можно использовать дефис.</span><small id="name-error" th:errors="*{displayName}"></small></label>
+            <label>Email<input type="email" th:field="*{email}" autocomplete="email" required maxlength="254" placeholder="name@example.ru" aria-describedby="email-help email-error"><span id="email-help" class="field-help">На этот адрес придёт код подтверждения.</span><small id="email-error" th:errors="*{email}"></small></label>
             <label>Пароль<input type="password" th:field="*{password}" autocomplete="new-password" required placeholder="Минимум 10 символов"><small th:errors="*{password}"></small></label>
             <label>Повторите пароль<input type="password" th:field="*{passwordConfirmation}" autocomplete="new-password" required><small th:errors="*{passwordConfirmation}"></small></label>
             <small class="field-error" th:errors="*{passwordLengthValid}"></small>

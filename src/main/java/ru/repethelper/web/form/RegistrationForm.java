@@ -2,13 +2,16 @@ package ru.repethelper.web.form;
 
 import jakarta.validation.constraints.*;
 import ru.repethelper.domain.Role;
+import ru.repethelper.web.validation.FullName;
+import ru.repethelper.web.validation.RegistrationEmail;
 import java.nio.charset.StandardCharsets;
 
 public class RegistrationForm {
     @NotBlank(message = "Введите имя и фамилию")
     @Size(min = 2, max = 80, message = "Имя должно содержать от 2 до 80 символов")
+    @FullName
     private String displayName;
-    @NotBlank(message = "Введите email") @Email(message = "Введите корректный email")
+    @NotBlank(message = "Введите email") @RegistrationEmail
     @Size(max = 254, message = "Email слишком длинный")
     private String email;
     @NotNull(message = "Выберите тип аккаунта")
@@ -32,9 +35,9 @@ public class RegistrationForm {
                 && password.getBytes(StandardCharsets.UTF_8).length <= 72;
     }
     public String getDisplayName() { return displayName; }
-    public void setDisplayName(String displayName) { this.displayName = displayName; }
+    public void setDisplayName(String displayName) { this.displayName = displayName == null ? null : displayName.trim().replaceAll("\\s+", " "); }
     public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public void setEmail(String email) { this.email = email == null ? null : email.trim(); }
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
     public String getPassword() { return password; }

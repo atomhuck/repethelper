@@ -102,6 +102,24 @@ class FullFlowIntegrationTest {
         User another = accounts.registerGenerated("Другой Ученик", "another.student@example.test",
                 "password123", Role.STUDENT, true);
         assertThat(another.getUsername()).isNotEqualTo(registered.getUsername());
+
+        mvc.perform(post("/register").with(csrf())
+                        .param("displayName", "Иван Иванович Петров")
+                        .param("email", "three.parts@example.test").param("password", "password123")
+                        .param("passwordConfirmation", "password123").param("role", "STUDENT")
+                        .param("termsAccepted", "true").param("personalDataAccepted", "true"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Введите имя и фамилию без отчества")));
+        assertThat(users.findByEmailIgnoreCase("three.parts@example.test")).isEmpty();
+
+        mvc.perform(post("/register").with(csrf())
+                        .param("displayName", "Иван Петров")
+                        .param("email", "not-an-email").param("password", "password123")
+                        .param("passwordConfirmation", "password123").param("role", "STUDENT")
+                        .param("termsAccepted", "true").param("personalDataAccepted", "true"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Введите корректный email")));
+        assertThat(users.findByEmailIgnoreCase("not-an-email")).isEmpty();
     }
 
     @Test
