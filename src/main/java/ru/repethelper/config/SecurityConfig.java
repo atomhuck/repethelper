@@ -7,12 +7,15 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.repethelper.domain.Role;
 import ru.repethelper.security.*;
 import ru.repethelper.service.*;
 
 @Configuration
 public class SecurityConfig {
+    private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
     @Bean PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(12); }
 
     @Bean
@@ -47,9 +50,10 @@ public class SecurityConfig {
                     } else if (!user.isEmailVerified()) {
                         response.sendRedirect("/verify-email/pending");
                     } else {
-                        String invitation = invitations.pendingPath(request.getSession(false)).orElse(null);
                         boolean teacher = authentication.getAuthorities().stream()
                                 .anyMatch(a -> a.getAuthority().equals("ROLE_" + Role.TEACHER));
+                        String invitation = invitations.takePendingPath(request.getSession(false), user.getRole())
+                                .orElse(null);
                         response.sendRedirect(invitation != null ? invitation : (teacher ? "/teacher" : "/student"));
                     }
                 })
@@ -69,6 +73,10 @@ public class SecurityConfig {
                 if (signedIn && "GET".equalsIgnoreCase(request.getMethod()) && wrongCabinet) {
                     response.sendRedirect(teacher ? "/teacher" : "/student");
                 } else {
+                    if (signedIn) {
+                        log.warn("Access denied after authentication: method={}, path={}, role={}",
+                                request.getMethod(), path, teacher ? "TEACHER" : "STUDENT");
+                    }
                     response.sendError(403);
                 }
             }))

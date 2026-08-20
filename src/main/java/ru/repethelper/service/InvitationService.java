@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import ru.repethelper.domain.TeacherProfile;
+import ru.repethelper.domain.Role;
 import ru.repethelper.repository.TeacherProfileRepository;
 
 import java.util.Optional;
@@ -30,11 +31,21 @@ public class InvitationService {
         session.setAttribute(PENDING_INVITE_CODE, target.code());
     }
 
-    public Optional<String> pendingPath(HttpSession session) {
+    /**
+     * Takes a pending invitation exactly once. A stale or role-incompatible
+     * invitation must never replace the normal post-authentication redirect.
+     */
+    @Transactional(readOnly = true)
+    public Optional<String> takePendingPath(HttpSession session, Role role) {
         if (session == null) return Optional.empty();
         Object code = session.getAttribute(PENDING_INVITE_CODE);
-        if (!(code instanceof String value) || value.isBlank()) return Optional.empty();
-        return Optional.of("/invite/" + value);
+        session.removeAttribute(PENDING_INVITE_CODE);
+        if (role != Role.STUDENT || !(code instanceof String value) || value.isBlank()) {
+            return Optional.empty();
+        }
+        return profiles.findWithUserByInviteCodeIgnoreCase(value.trim())
+                .filter(profile -> profile.getUser().isEnabled())
+                .map(profile -> "/invite/" + profile.getInviteCode());
     }
 
     public void clear(HttpSession session) {

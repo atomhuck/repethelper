@@ -298,7 +298,7 @@ public class AuthController {
     private User current(Authentication auth) { return accounts.requireByUsername(auth.getName()); }
 
     private String homeFor(User user, HttpSession session) {
-        String invitation = invitations.pendingPath(session).orElse(null);
+        String invitation = invitations.takePendingPath(session, user.getRole()).orElse(null);
         if (invitation != null) return "redirect:" + invitation;
         return user.getRole() == Role.TEACHER ? "redirect:/teacher" : "redirect:/student";
     }

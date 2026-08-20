@@ -339,6 +339,47 @@ class FullFlowIntegrationTest {
                 .doesNotContain(lesson);
     }
 
+    @Test
+    void postAuthenticationInvitationRedirectIsOneTimeAndNeverOverridesTheWrongRole() throws Exception {
+        String suffix = Long.toUnsignedString(System.nanoTime());
+        User teacher = verified(accounts.register("Учитель приглашения", "redirect_teacher_" + suffix,
+                "redirect.teacher." + suffix + "@example.test", "InvitePassword123", Role.TEACHER, true));
+        User student = verified(accounts.register("Ученик приглашения", "redirect_student_" + suffix,
+                "redirect.student." + suffix + "@example.test", "InvitePassword123", Role.STUDENT, true));
+        String code = profiles.requireFor(teacher).getInviteCode();
+
+        MockHttpSession studentSession = new MockHttpSession();
+        mvc.perform(get("/invite/{code}", code).session(studentSession))
+                .andExpect(status().isOk());
+        var studentLogin = mvc.perform(post("/login").session(studentSession).with(csrf())
+                        .param("email", student.getEmail()).param("password", "InvitePassword123"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/invite/" + code))
+                .andReturn();
+        MockHttpSession authenticatedStudent = (MockHttpSession) studentLogin.getRequest().getSession(false);
+        assertThat(authenticatedStudent.getAttribute(InvitationService.PENDING_INVITE_CODE)).isNull();
+
+        mvc.perform(get("/invite/{code}", code).session(authenticatedStudent))
+                .andExpect(status().isOk());
+        assertThat(authenticatedStudent.getAttribute(InvitationService.PENDING_INVITE_CODE)).isNull();
+
+        MockHttpSession staleSession = new MockHttpSession();
+        staleSession.setAttribute(InvitationService.PENDING_INVITE_CODE, "no-longer-valid");
+        mvc.perform(post("/login").session(staleSession).with(csrf())
+                        .param("email", student.getEmail()).param("password", "InvitePassword123"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/student"));
+        assertThat(staleSession.getAttribute(InvitationService.PENDING_INVITE_CODE)).isNull();
+
+        MockHttpSession teacherSession = new MockHttpSession();
+        teacherSession.setAttribute(InvitationService.PENDING_INVITE_CODE, code);
+        mvc.perform(post("/login").session(teacherSession).with(csrf())
+                        .param("email", teacher.getEmail()).param("password", "InvitePassword123"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/teacher"));
+        assertThat(teacherSession.getAttribute(InvitationService.PENDING_INVITE_CODE)).isNull();
+    }
+
     @Test void calendarFragmentsAndStudentBoardHistoryStayPrivate() throws Exception {
         User teacher = accounts.requireByUsername("teacher");
         User student = accounts.registerStudent("Ученик досок", "board_history_student", "password123");

@@ -32,14 +32,16 @@ public class InvitationController {
     @GetMapping("/{code}")
     String show(@PathVariable String code, Authentication authentication, HttpSession session, Model model) {
         InvitationService.InviteTarget target = invitations.requireActive(code);
-        invitations.remember(session, target);
         model.addAttribute("invite", target);
         User user = authenticatedUser(authentication);
         if (user == null) {
+            invitations.remember(session, target);
             model.addAttribute("state", "GUEST");
         } else if (user.getRole() != Role.STUDENT) {
+            invitations.clear(session);
             model.addAttribute("state", "NOT_STUDENT");
         } else {
+            invitations.clear(session);
             model.addAttribute("state", connections.inviteState(user, target.teacherId()).name());
         }
         return "invite";
