@@ -20,6 +20,11 @@ test("public landing and authentication remain responsive", async ({ page }) => 
   await expect(page.getByRole("heading", { name: "Регистрация" })).toBeVisible();
   await expect(page.getByLabel(/Имя и фамилия/)).not.toBeFocused();
   await assertNoHorizontalOverflow(page);
+
+  await page.setViewportSize({ width: 1024, height: 830 });
+  await page.goto("/login");
+  await expect(page.getByRole("heading", { name: "Войти в аккаунт" })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight + 1)).toBe(true);
 });
 
 test("teacher calendar switches periods without a full navigation", async ({ page }) => {

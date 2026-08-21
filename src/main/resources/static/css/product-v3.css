@@ -215,12 +215,12 @@ input:focus, select:focus, textarea:focus { border-color: var(--focus); box-shad
 .week-day-column.today { background:color-mix(in srgb,var(--primary-soft) 38%,var(--surface)); }
 .week-day-column:last-child { border-right:0; }
 .week-hour-line { display:block; height:var(--hour-height); border-bottom:1px solid color-mix(in srgb,var(--line) 70%,transparent); }
-.week-lesson { position:absolute; z-index:2; top:calc(var(--lesson-start) * var(--hour-height) / 60); left:calc(var(--lesson-column) * 100% / var(--lesson-columns) + 3px); width:calc(100% / var(--lesson-columns) - 6px); min-height:34px; height:max(34px,calc(var(--lesson-duration) * var(--hour-height) / 60 - 4px)); padding:7px 8px; overflow:hidden; color:var(--text); border:1px solid color-mix(in srgb,var(--primary) 30%,var(--line)); border-left:3px solid var(--primary); border-radius:var(--radius-sm); background:var(--primary-soft); text-decoration:none; }
+.week-lesson { position:absolute; z-index:2; top:calc(var(--lesson-start) * var(--hour-height) / 60); left:calc(var(--lesson-column) * 100% / var(--lesson-columns) + 3px); width:calc(100% / var(--lesson-columns) - 6px); min-height:42px; height:max(42px,calc(var(--lesson-duration) * var(--hour-height) / 60 - 1px)); padding:5px 7px; overflow:hidden; color:var(--text); border:1px solid color-mix(in srgb,var(--primary) 30%,var(--line)); border-left:3px solid var(--primary); border-radius:var(--radius-sm); background:var(--primary-soft); text-decoration:none; }
 .week-lesson:hover { z-index:4; border-color:var(--primary); }
 .week-lesson time, .week-lesson strong, .week-lesson small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.week-lesson time { color:var(--primary);font-size:.68rem;font-weight:600; }
-.week-lesson strong { margin-top:2px; font-size:.78rem; }
-.week-lesson small { color:var(--muted); font-size:.64rem; }
+.week-lesson time { color:var(--primary);font-size:.68rem;font-weight:600;line-height:1.15; }
+.week-lesson strong { margin-top:1px; font-size:.78rem; line-height:1.15; }
+.week-lesson small { margin-top:1px; color:var(--muted); font-size:.64rem; line-height:1.15; }
 .week-lesson.past { opacity:.56; filter:saturate(.45); }
 .week-lesson.current { border-left-color:var(--success); background:var(--success-soft); }
 .week-lesson.cancelled { color:var(--danger); border-color:color-mix(in srgb,var(--danger) 30%,var(--line)); border-left-color:var(--danger); background:var(--danger-soft); text-decoration:line-through; }
@@ -297,6 +297,22 @@ input:focus, select:focus, textarea:focus { border-color: var(--focus); box-shad
 .auth-copy { position:relative; padding:0; }.auth-copy h1 { max-width:660px; margin:48px 0 18px; font-size:clamp(3rem,5vw,5.2rem); }.auth-copy .lead { max-width:590px; color:var(--muted); font-size:1.08rem; }.auth-mascot { display:block; width:330px; max-height:230px; margin:24px 0 -20px auto; object-fit:cover; object-position:top; }
 .auth-card,.auth-form-card { padding:36px; border:1px solid var(--line); border-radius:var(--radius-lg); background:var(--surface); box-shadow:none; }.auth-card h2,.auth-form-card h1 { margin:4px 0 22px; font-size:1.8rem; }.auth-divider::before,.auth-divider::after { background:var(--line); }.auth-shell > .auth-form-card:only-child,.auth-shell > .auth-card:only-child { grid-column:1/-1;justify-self:center;width:min(100%,460px); }
 
+/* The sign-in page is one self-contained composition on desktop: the mascot supports
+   the copy instead of extending the page below the fold. */
+.auth-login-page { display:block; padding:0; }
+.auth-login-page .auth-shell { min-height:100dvh; padding:32px 0; }
+.auth-login-page .auth-copy { min-height:520px; display:flex; flex-direction:column; justify-content:center; }
+.auth-login-page .auth-copy h1 { max-width:510px; margin:32px 0 16px; }
+.auth-login-page .auth-copy .lead { max-width:390px; }
+.auth-login-page .auth-mascot { position:absolute; right:0; bottom:24px; width:216px; max-height:none; margin:0; object-fit:contain; }
+
+/* Keep agenda rows readable when the tablet layout puts two columns side by side. */
+.workspace-agenda .upcoming-item { gap:10px; }
+.workspace-agenda .upcoming-item > div:nth-child(2) { flex:1 1 auto; min-width:0; }
+.workspace-agenda .date-chip { width:54px; flex-basis:54px; padding:7px 2px; }
+.workspace-agenda .date-chip strong,.workspace-agenda .date-chip small { white-space:nowrap; }
+.workspace-agenda .upcoming-item .arrow { flex:0 0 18px; }
+
 @media (max-width: 1100px) {
   .container { width:min(100% - 40px,960px); }
   .landing-header,.landing-page main,.audience-grid,.landing-cta,.landing-footer { width:calc(100% - 40px); }
@@ -304,6 +320,9 @@ input:focus, select:focus, textarea:focus { border-color: var(--focus); box-shad
   .landing-hero { grid-template-columns:1fr 1fr; gap:32px; }.landing-hero-copy h1 { font-size:4.2rem; }
   .teacher-workspace-page .workspace-schedule,.dashboard-grid { grid-template-columns:1fr; }.schedule-rail { display:none; }.workspace-agenda,.side-panel { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-content:start; }.workspace-agenda .panel-heading,.workspace-agenda .upcoming-more,.side-panel .panel-heading,.side-panel .upcoming-more { grid-column:1/-1; }
   .calendar-workspace.is-week { overflow-x:auto; }
+
+  .auth-login-page .auth-copy .lead { max-width:210px; }
+  .auth-login-page .auth-mascot { bottom:58px; }
 }
 
 @media (max-width: 768px) {
