@@ -70,8 +70,8 @@
             <p th:text="${'Место ' + lesson.subscriptionCredit.ordinal + ' из ' + lesson.subscriptionCredit.subscription.totalLessons}">Место 2 из 8</p>
             <small>Цена и статус закреплены за абонементом. Чтобы изменить их вручную, сначала верните занятие в баланс.</small>
             <div class="subscription-lesson-actions">
-                <form th:action="@{/teacher/lessons/{id}/subscription/release(id=${lesson.id})}" method="post" onsubmit="return confirm('Вернуть это занятие в свободный баланс абонемента?');"><button class="button secondary" type="submit">Вернуть в абонемент</button></form>
-                <form th:if="${started}" th:action="@{/teacher/lessons/{id}/subscription/no-show(id=${lesson.id})}" method="post" onsubmit="return confirm('Списать занятие как пропуск? Оно исчезнет из календаря, а место не вернётся в баланс.');"><button class="button danger-button" type="submit">Списать как пропуск</button></form>
+                <form th:action="@{/teacher/lessons/{id}/subscription/release(id=${lesson.id})}" method="post" data-confirm="Вернуть это занятие в свободный баланс абонемента?"><button class="button secondary" type="submit">Вернуть в абонемент</button></form>
+                <form th:if="${started}" th:action="@{/teacher/lessons/{id}/subscription/no-show(id=${lesson.id})}" method="post" data-confirm="Списать занятие как пропуск? Оно исчезнет из календаря, а место не вернётся в баланс."><button class="button danger-button" type="submit">Списать как пропуск</button></form>
             </div>
         </div>
         <div th:unless="${lesson.paidBySubscription}" class="finance-actions">
@@ -127,18 +127,6 @@
                     th:data-board-url="@{/boards/{publicId}(publicId=${board.publicId})}">Скопировать ссылку</button>
         </div>
     </section>
-    <script>
-        document.querySelector(".copy-board-link")?.addEventListener("click", async event => {
-            const url = new URL(event.currentTarget.dataset.boardUrl, location.origin).href;
-            try {
-                await navigator.clipboard.writeText(url);
-                event.currentTarget.textContent = "Ссылка скопирована";
-                setTimeout(() => event.currentTarget.textContent = "Скопировать ссылку", 1800);
-            } catch {
-                window.prompt("Скопируйте ссылку на доску", url);
-            }
-        });
-    </script>
 
     <form th:if="${user.role.name() == 'TEACHER'}" th:action="@{/teacher/lessons/{id}/materials(id=${lesson.id})}" th:object="${materialsForm}" method="post" class="lesson-sections">
         <section class="panel material-card"><div class="material-heading"><span class="material-icon green"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#check}"></use></svg></span><div><p class="eyebrow">До следующей встречи</p><h2>Домашнее задание</h2></div></div><label class="sr-only" for="homeworkText">Текст домашнего задания</label><textarea id="homeworkText" th:field="*{homeworkText}" rows="7" placeholder="Опишите задание, номера задач и полезные ссылки..."></textarea><div class="teacher-link-preview" data-link-preview="homeworkText" th:if="${homeworkHtml != null}"><small>Предпросмотр · ссылки кликабельны</small><div class="rich-text" th:utext="${homeworkHtml}"></div></div></section>
@@ -211,50 +199,7 @@
             <div class="action-dialog-footer" th:unless="${lesson.recurring}"><button class="button secondary" type="button" data-dialog-close>Отмена</button><button class="button danger-button" type="submit" name="scope" value="SINGLE">Удалить занятие</button></div>
         </form>
     </dialog>
-    <script>
-        document.querySelector(".price-update-form")?.addEventListener("submit", event => {
-            const form = event.currentTarget;
-            const currentPrice = form.dataset.currentPrice || '';
-            const nextPrice = form.querySelector('input[name="priceRubles"]').value;
-            const scope = form.querySelector('input[name="scope"]:checked')?.value || 'SINGLE';
-            if (form.dataset.paid === "true" && scope === "SINGLE" && currentPrice !== nextPrice) {
-                const confirmed = confirm("Стоимость оплаченного занятия изменится, а отметка «Оплачено» будет сброшена. Продолжить?");
-                if (!confirmed) {
-                    event.preventDefault();
-                    return;
-                }
-                form.querySelector(".paid-change-confirmation").value = "true";
-            }
-        });
-        document.querySelectorAll(".upload-form").forEach(form => {
-            const input = form.querySelector('input[type="file"]');
-            const label = form.querySelector(".file-picker-label");
-            if (!input) return;
-
-            form.classList.add("js-auto-upload");
-            input.addEventListener("change", () => {
-                if (!input.files?.length || form.classList.contains("is-uploading")) return;
-                const remaining = Number(form.dataset.remaining || 0);
-                if (input.files.length > remaining) {
-                    alert(`Можно добавить ещё не более ${remaining} файлов`);
-                    input.value = "";
-                    return;
-                }
-                if ([...input.files].some(file => file.size > 15 * 1024 * 1024)) {
-                    alert("Размер одного файла не должен превышать 15 МБ");
-                    input.value = "";
-                    return;
-                }
-                form.classList.add("is-uploading");
-                if (label) {
-                    label.textContent = input.files.length === 1
-                        ? `Загрузка: ${input.files[0].name}`
-                        : `Загрузка файлов: ${input.files.length}`;
-                }
-                form.requestSubmit();
-            });
-        });
-    </script>
+    <script defer th:src="@{/js/lesson-page.js(v=1)}"></script>
 </main>
 <nav th:replace="~{fragments :: mobileNav(${user}, 'dashboard')}"></nav>
 <footer th:replace="~{fragments :: footer}"></footer>

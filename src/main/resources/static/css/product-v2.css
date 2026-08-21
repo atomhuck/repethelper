@@ -1,0 +1,993 @@
+/*
+ * RepetHelper product UI v2.
+ * This file is an intentionally isolated migration layer over app.css.
+ * It changes visual hierarchy only; routes, form contracts and behavior stay intact.
+ */
+
+:root {
+  --bg: #f7f7f9;
+  --bg-accent: #f2f2f6;
+  --surface: #ffffff;
+  --surface-2: #f4f4f7;
+  --surface-3: #e9eaf0;
+  --line: #dedfe6;
+  --line-strong: #c5c7d0;
+  --text: #191a22;
+  --text-soft: #3d404d;
+  --muted: #696d7d;
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-soft: #efefff;
+  --accent: #7656d8;
+  --accent-soft: #f2effc;
+  --focus: #4f46e5;
+  --shadow-sm: 0 1px 2px rgba(24, 25, 34, .04);
+  --shadow-lg: 0 16px 36px rgba(24, 25, 34, .12);
+  --radius-sm: 7px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+}
+
+:root[data-theme="dark"] {
+  --bg: #101219;
+  --bg-accent: #151821;
+  --surface: #181b24;
+  --surface-2: #20242f;
+  --surface-3: #2a2f3b;
+  --line: #303541;
+  --line-strong: #474e5d;
+  --text: #f5f6f8;
+  --text-soft: #d5d7de;
+  --muted: #a3a7b3;
+  --primary: #5b55d6;
+  --primary-hover: #6b65e4;
+  --primary-soft: #292846;
+  --accent: #9b82e7;
+  --accent-soft: #2c2740;
+  --focus: #aaa7ff;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .2);
+  --shadow-lg: 0 18px 42px rgba(0, 0, 0, .32);
+}
+
+html {
+  background: var(--bg);
+}
+
+body {
+  color: var(--text);
+  background: var(--bg);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+h1,
+h2,
+h3,
+strong,
+b {
+  text-wrap: pretty;
+}
+
+h1 {
+  font-size: clamp(2rem, 3.4vw, 2.65rem);
+  font-weight: 680;
+  line-height: 1.06;
+  letter-spacing: -.045em;
+}
+
+h2 {
+  font-size: 1.16rem;
+  font-weight: 660;
+  letter-spacing: -.025em;
+}
+
+h3 {
+  font-weight: 640;
+}
+
+.container {
+  width: min(1180px, calc(100% - 48px));
+}
+
+.container.narrow {
+  width: min(920px, calc(100% - 48px));
+}
+
+.page {
+  padding: 40px 0 72px;
+}
+
+.page > .panel,
+.page > form.panel,
+.page > section.panel {
+  margin-bottom: 20px;
+}
+
+.panel {
+  border-color: var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: none;
+}
+
+.eyebrow {
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: .72rem;
+  font-weight: 620;
+  letter-spacing: 0;
+}
+
+.lead {
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.page-header {
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.page-header h1 {
+  margin-bottom: 8px;
+}
+
+.page-header p:last-child {
+  color: var(--muted);
+}
+
+.button,
+.icon-button,
+.topbar-button {
+  border-radius: var(--radius-md);
+  font-weight: 620;
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+}
+
+.button {
+  min-height: 42px;
+  gap: 7px;
+  padding-inline: 15px;
+}
+
+.button.primary,
+.button.primary:hover,
+.lesson-call-button.is-ready,
+.lesson-call-button.is-ready:hover {
+  box-shadow: none;
+}
+
+.button.primary {
+  background: var(--primary);
+}
+
+.button.primary:hover {
+  background: var(--primary-hover);
+}
+
+.button.secondary {
+  background: transparent;
+}
+
+.button.secondary:hover {
+  background: var(--surface-2);
+}
+
+.button.compact {
+  min-height: 36px;
+  border-radius: 8px;
+}
+
+.icon-button {
+  border-radius: 9px;
+  box-shadow: none;
+}
+
+.topbar {
+  height: 64px;
+  border-bottom-color: var(--line);
+  background: var(--surface);
+  backdrop-filter: none;
+}
+
+.brand {
+  font-weight: 680;
+}
+
+.nav-links {
+  gap: 2px;
+  margin-left: 36px;
+}
+
+.nav-links a {
+  padding: 8px 11px;
+  border-radius: 8px;
+  font-weight: 580;
+}
+
+.nav-links a.active {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.nav-links a.active::after {
+  right: 11px;
+  bottom: -14px;
+  left: 11px;
+  height: 2px;
+  background: var(--primary);
+}
+
+.theme-toggle,
+.account-summary {
+  border-radius: var(--radius-md);
+}
+
+.account-menu-panel,
+.action-menu-panel {
+  padding: 6px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.account-link,
+.account-logout,
+.action-menu-panel a,
+.action-menu-panel button {
+  border-radius: 8px;
+  font-weight: 580;
+}
+
+.alert {
+  border-radius: var(--radius-md);
+  font-weight: 540;
+}
+
+.logout-dialog,
+.action-dialog {
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+}
+
+.logout-dialog::backdrop,
+.action-dialog::backdrop {
+  background: rgba(12, 14, 20, .62);
+  backdrop-filter: none;
+}
+
+.dialog-icon,
+.scope-action-icon {
+  border-radius: var(--radius-md);
+}
+
+.scope-action {
+  min-height: 66px;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.scope-action:hover,
+.scope-action:focus-visible {
+  background: var(--primary-soft);
+}
+
+.stack-form {
+  gap: 16px;
+}
+
+.stack-form label,
+.inline-profile label,
+.meeting-url-form label {
+  gap: 6px;
+  font-weight: 600;
+}
+
+input,
+select,
+textarea {
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+textarea {
+  line-height: 1.6;
+}
+
+input:hover,
+select:hover,
+textarea:hover {
+  border-color: var(--line-strong);
+}
+
+.choice-fieldset {
+  gap: 8px;
+}
+
+.choice-card {
+  min-height: 64px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.choice-card:has(input:checked) {
+  background: var(--primary-soft);
+  box-shadow: none;
+}
+
+.panel-heading {
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.section-panel,
+.calendar-panel,
+.side-panel,
+.attachment-panel {
+  padding: 20px;
+}
+
+.count {
+  min-width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  font-weight: 650;
+}
+
+.empty,
+.empty.compact {
+  min-height: 112px;
+  gap: 6px;
+  padding: 24px 16px;
+  background: transparent;
+}
+
+.empty::before,
+.empty.compact::before {
+  display: none;
+}
+
+.person-row,
+.history-row {
+  gap: 12px;
+  padding: 14px 0;
+}
+
+.avatar,
+.stat-icon,
+.material-icon {
+  border-radius: var(--radius-md);
+}
+
+.tag,
+.status-pill,
+.private-badge,
+.lesson-indicators span,
+.payment-pill,
+.lesson-status {
+  min-height: 25px;
+  padding-inline: 8px;
+  border-radius: 7px;
+  font-weight: 600;
+}
+
+/* Dashboard hierarchy */
+.stats-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  overflow: hidden;
+  margin-bottom: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.stats-grid .stat {
+  min-height: 86px;
+  padding: 16px 18px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.stats-grid .stat:last-child {
+  border-right: 0;
+}
+
+.stat:hover {
+  background: var(--surface-2);
+  box-shadow: none;
+}
+
+.stat strong {
+  font-size: 1.45rem;
+  font-weight: 670;
+}
+
+.dashboard-grid {
+  grid-template-columns: minmax(0, 2.2fr) minmax(270px, .8fr);
+  gap: 20px;
+}
+
+.calendar-panel {
+  border-color: var(--line-strong);
+}
+
+.calendar-nav {
+  border-radius: 8px;
+}
+
+.calendar-day {
+  border-radius: 8px;
+}
+
+.calendar-event {
+  border-radius: 7px;
+}
+
+.side-panel .upcoming-item,
+.history-row,
+.person-row,
+.student-lesson-row,
+.finance-row {
+  transition: background-color .15s ease;
+}
+
+.side-panel .upcoming-item:hover,
+.history-row:hover,
+.student-lesson-row:hover,
+.finance-row:hover {
+  background: var(--surface-2);
+}
+
+.code-panel {
+  padding: 20px 22px;
+  background: transparent;
+}
+
+.popover-panel {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.new-lesson-form {
+  padding: 20px;
+}
+
+.subscription-create-fields,
+.subscription-preview {
+  border-radius: var(--radius-md);
+}
+
+/* Student lists and profile */
+.student-profile-hero,
+.lesson-hero {
+  padding: 0 0 24px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+}
+
+.student-profile-avatar {
+  border-radius: var(--radius-lg);
+}
+
+.student-description-card,
+.subscription-section,
+.student-boards-preview {
+  padding: 20px 22px;
+}
+
+.student-overview-grid {
+  gap: 16px;
+}
+
+.student-overview-card {
+  padding: 20px;
+}
+
+.private-overview-card,
+.private-note-card {
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--line));
+  background: color-mix(in srgb, var(--accent-soft) 34%, var(--surface));
+}
+
+.subscription-package-card,
+.student-subscription-row {
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+
+.subscription-package-card {
+  padding: 14px 16px;
+}
+
+.subscription-mark,
+.subscription-count {
+  border-radius: var(--radius-md);
+  background: var(--accent);
+}
+
+/* Lesson page */
+.lesson-hero h1 {
+  font-size: clamp(1.8rem, 3vw, 2.35rem);
+}
+
+.meeting-card,
+.board-card,
+.finance-card,
+.homework-status-card,
+.private-note-card,
+.danger-zone {
+  padding: 20px 22px;
+}
+
+.meeting-card,
+.board-card {
+  border-color: var(--line-strong);
+}
+
+.lesson-call-button {
+  border-radius: var(--radius-md);
+}
+
+.board-card-visual {
+  border-radius: var(--radius-lg);
+}
+
+.lesson-sections,
+.attachments-grid {
+  gap: 16px;
+}
+
+.material-card,
+.attachment-panel {
+  padding: 20px;
+}
+
+.material-card {
+  box-shadow: none;
+}
+
+.file-row {
+  border-radius: 0;
+}
+
+.file-picker {
+  border-radius: var(--radius-md);
+}
+
+.danger-zone {
+  background: transparent;
+}
+
+/* Finance */
+.finance-kpis {
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.finance-kpi {
+  min-height: 112px;
+  padding: 18px 20px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.finance-kpi:last-child {
+  border-right: 0;
+}
+
+.finance-kpi strong {
+  font-weight: 680;
+}
+
+.finance-chart-panel,
+.finance-month-panel,
+.finance-debts-panel {
+  padding: 20px 22px;
+}
+
+.finance-chart-bar {
+  border-radius: 5px 5px 2px 2px;
+}
+
+.finance-row {
+  border-radius: 0;
+}
+
+.finance-filters {
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+
+/* Auth, account and legal */
+.auth-page {
+  padding: 32px;
+  background: var(--bg);
+}
+
+.auth-shell {
+  width: min(960px, 100%);
+  min-height: 560px;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 420px);
+  gap: 56px;
+}
+
+.auth-copy {
+  padding: 28px 40px 28px 0;
+  border-right: 1px solid var(--line);
+}
+
+.auth-copy::before,
+.auth-copy::after,
+.terminal-card::after {
+  display: none;
+}
+
+.auth-copy h1 {
+  max-width: 540px;
+  margin-top: 44px;
+  font-size: clamp(2.2rem, 4.4vw, 3.15rem);
+  font-weight: 670;
+}
+
+.auth-card {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.auth-card h1,
+.auth-card h2 {
+  font-size: 1.55rem;
+}
+
+.auth-feature-card,
+.terminal-card {
+  padding: 15px 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.security-card {
+  padding: 22px;
+}
+
+.legal-card {
+  box-shadow: none;
+}
+
+.legal-page-nav {
+  border-radius: var(--radius-md);
+}
+
+/* Private control console */
+body.control-page {
+  background: var(--bg);
+}
+
+body.control-page .control-topbar {
+  height: 64px;
+  background: var(--surface);
+}
+
+body.control-page .control-shell {
+  width: min(1120px, calc(100% - 48px));
+  padding: 36px 0 64px;
+}
+
+.control-page-title,
+.control-profile-heading {
+  margin-bottom: 28px;
+}
+
+.control-page-title h1,
+.control-profile-heading h1 {
+  font-size: clamp(2rem, 3vw, 2.55rem);
+  font-weight: 670;
+}
+
+.control-count {
+  border-radius: 8px;
+  background: transparent;
+}
+
+.control-stat-grid {
+  gap: 0;
+  overflow: hidden;
+  margin-bottom: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.control-stat {
+  min-height: 118px;
+  padding: 18px 20px !important;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.control-stat:nth-child(3n) {
+  border-right: 0;
+}
+
+.control-stat:nth-last-child(-n + 3) {
+  border-bottom: 0;
+}
+
+.control-stat::after {
+  display: none;
+}
+
+.control-stat strong {
+  font-size: 2rem;
+  font-weight: 670;
+  letter-spacing: -.05em;
+}
+
+.control-product-state,
+.control-secret,
+.control-card {
+  box-shadow: none;
+}
+
+.control-disclosure,
+.control-filter,
+.control-user-list {
+  border-radius: var(--radius-lg);
+}
+
+.control-user-row:hover {
+  background: var(--surface-2);
+}
+
+.control-profile-heading > .account-avatar,
+.control-user-row > .account-avatar {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.control-danger-card,
+.danger-zone {
+  background: var(--surface);
+}
+
+/* Mobile */
+@media (max-width: 960px) {
+  .dashboard-grid,
+  .lesson-sections,
+  .attachments-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .auth-copy {
+    padding: 0 0 24px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .auth-copy h1 {
+    margin-top: 18px;
+  }
+}
+
+@media (max-width: 768px) {
+  .container,
+  .container.narrow {
+    width: min(100% - 28px, 1180px);
+  }
+
+  .topbar {
+    height: 60px;
+  }
+
+  .page {
+    padding: 28px 0 104px;
+  }
+
+  .mobile-nav {
+    right: 8px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    left: 8px;
+    gap: 2px;
+    padding: 5px;
+    border-radius: 14px;
+    background: var(--surface);
+    box-shadow: 0 8px 24px rgba(24, 25, 34, .14);
+    backdrop-filter: none;
+  }
+
+  .mobile-nav a {
+    min-height: 50px;
+    border-radius: 9px;
+  }
+
+  .mobile-nav .mobile-add {
+    background: var(--primary);
+  }
+
+  .finance-kpis {
+    grid-template-columns: 1fr;
+  }
+
+  .finance-kpi,
+  .finance-kpi:last-child {
+    min-height: 88px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .finance-kpi:last-child {
+    border-bottom: 0;
+  }
+
+  .control-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .control-stat,
+  .control-stat:nth-child(3n),
+  .control-stat:nth-last-child(-n + 3) {
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .control-stat:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .control-stat:nth-last-child(-n + 2) {
+    border-bottom: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .page-header {
+    margin-bottom: 24px;
+  }
+
+  .page-header h1 {
+    font-size: clamp(1.8rem, 8vw, 2.1rem);
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-grid .stat,
+  .stats-grid .stat:last-child {
+    min-height: 74px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .stats-grid .stat:last-child {
+    border-bottom: 0;
+  }
+
+  .calendar-panel,
+  .side-panel,
+  .section-panel,
+  .student-description-card,
+  .subscription-section,
+  .student-overview-card,
+  .student-boards-preview,
+  .private-note-card,
+  .student-lessons-section,
+  .homework-status-card,
+  .finance-card,
+  .material-card,
+  .attachment-panel {
+    padding: 16px;
+  }
+
+  .calendar-panel {
+    border-color: var(--line);
+  }
+
+  .popover-panel {
+    top: 68px;
+    right: 10px;
+    left: 10px;
+    max-height: calc(var(--visual-viewport-height, 100dvh) - 150px);
+  }
+
+  .new-lesson-form {
+    padding: 16px;
+  }
+
+  .action-dialog {
+    width: calc(100vw - 16px);
+    margin: auto 8px 8px;
+    border-radius: 14px;
+  }
+
+  .action-dialog-card {
+    padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
+  }
+
+  .auth-page {
+    padding: 18px 16px;
+  }
+
+  .auth-copy {
+    margin-bottom: 24px;
+    padding-bottom: 18px;
+  }
+
+  .auth-card {
+    padding: 0;
+    border-radius: 0;
+  }
+
+  .auth-card h1,
+  .auth-card h2 {
+    margin-bottom: 18px;
+  }
+
+  body.control-page .control-shell {
+    width: min(100% - 28px, 1120px);
+    padding: 28px 0 48px;
+  }
+
+  .control-stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .control-stat,
+  .control-stat:nth-child(2n),
+  .control-stat:nth-child(3n),
+  .control-stat:nth-last-child(-n + 2),
+  .control-stat:nth-last-child(-n + 3) {
+    min-height: 96px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .control-stat:last-child {
+    border-bottom: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button,
+  .icon-button,
+  .topbar-button,
+  .person-row,
+  .history-row,
+  .student-lesson-row,
+  .finance-row {
+    transition: none;
+  }
+}

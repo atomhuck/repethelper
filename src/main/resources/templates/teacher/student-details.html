@@ -91,10 +91,10 @@
                     </details>
                 </div>
                 <div class="subscription-package-actions">
-                    <form th:if="${!item.subscription.cancelled && item.available > 0}" th:action="@{/teacher/subscriptions/{id}/cancel-remaining(id=${item.subscription.id})}" method="post" onsubmit="return confirm('Отменить свободный остаток? Уже закреплённые занятия сохранятся.');">
+                    <form th:if="${!item.subscription.cancelled && item.available > 0}" th:action="@{/teacher/subscriptions/{id}/cancel-remaining(id=${item.subscription.id})}" method="post" data-confirm="Отменить свободный остаток? Уже закреплённые занятия сохранятся.">
                         <input type="hidden" name="studentId" th:value="${student.id}"><button class="button ghost compact" type="submit">Отменить остаток</button>
                     </form>
-                    <form th:if="${item.planned == 0 && item.used == 0}" th:action="@{/teacher/subscriptions/{id}/delete(id=${item.subscription.id})}" method="post" onsubmit="return confirm('Удалить пустой абонемент?');">
+                    <form th:if="${item.planned == 0 && item.used == 0}" th:action="@{/teacher/subscriptions/{id}/delete(id=${item.subscription.id})}" method="post" data-confirm="Удалить пустой абонемент?">
                         <input type="hidden" name="studentId" th:value="${student.id}"><button class="button danger-button compact" type="submit">Удалить</button>
                     </form>
                 </div>
@@ -258,34 +258,6 @@
 </main>
 <nav th:replace="~{fragments :: mobileNav(${user}, 'students')}"></nav>
 <footer th:replace="~{fragments :: footer}"></footer>
-<script>
-    (() => {
-        const form = document.querySelector('[data-subscription-create-form]');
-        if (!form) return;
-        const countInput = form.querySelector('[data-subscription-count]');
-        const totalInput = form.querySelector('[data-subscription-total]');
-        const preview = form.querySelector('[data-subscription-preview]');
-        const updatePreview = () => {
-            const count = Number(countInput.value || 0);
-            const total = Number(String(totalInput.value || '').replace(/[^0-9]/g, ''));
-            if (!Number.isInteger(count) || count < 1 || count > 100 || !Number.isInteger(total) || total < count) {
-                preview.textContent = 'Укажите от 1 до 100 занятий и общую стоимость не меньше количества занятий.';
-                return;
-            }
-            if (total > count * 1_000_000) {
-                preview.textContent = 'На одно занятие должно приходиться не больше 1 000 000 ₽.';
-                return;
-            }
-            const base = Math.floor(total / count);
-            const remainder = total % count;
-            preview.textContent = remainder
-                ? `${count} занятий · ${remainder} по ${(base + 1).toLocaleString('ru-RU')} ₽ и ${count - remainder} по ${base.toLocaleString('ru-RU')} ₽`
-                : `${count} занятий · по ${base.toLocaleString('ru-RU')} ₽`;
-        };
-        countInput.addEventListener('input', updatePreview);
-        totalInput.addEventListener('input', updatePreview);
-        updatePreview();
-    })();
-</script>
+<script defer th:src="@{/js/student-profile.js(v=1)}"></script>
 </body>
 </html>

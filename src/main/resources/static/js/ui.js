@@ -155,6 +155,59 @@
     });
   });
 
+  const confirmationDialog = (() => {
+    const dialog = document.createElement("dialog");
+    dialog.className = "action-dialog confirm-dialog";
+    dialog.innerHTML = `
+      <div class="action-dialog-card">
+        <div class="action-dialog-heading">
+          <div><p class="eyebrow">Подтверждение</p><h2>Продолжить?</h2></div>
+          <button class="icon-button" type="button" data-confirm-cancel aria-label="Закрыть"><svg class="ui-icon" aria-hidden="true"><use href="/brand/ui-icons.svg#x"></use></svg></button>
+        </div>
+        <p class="action-dialog-copy" data-confirm-message></p>
+        <div class="action-dialog-footer">
+          <button class="button secondary" type="button" data-confirm-cancel>Отмена</button>
+          <button class="button primary" type="button" data-confirm-accept>Продолжить</button>
+        </div>
+      </div>`;
+    document.body.appendChild(dialog);
+    return dialog;
+  })();
+
+  let pendingConfirmation = null;
+  document.addEventListener("submit", event => {
+    const form = event.target.closest("form[data-confirm]");
+    if (!form || form.dataset.confirmed === "true") return;
+    event.preventDefault();
+    pendingConfirmation = { form, submitter: event.submitter || null };
+    confirmationDialog.querySelector("[data-confirm-message]").textContent = form.dataset.confirm;
+    confirmationDialog.showModal();
+    confirmationDialog.querySelector("[data-confirm-accept]").focus();
+  });
+
+  confirmationDialog.addEventListener("click", event => {
+    if (event.target === confirmationDialog || event.target.closest("[data-confirm-cancel]")) {
+      const returnFocus = pendingConfirmation?.submitter;
+      pendingConfirmation = null;
+      confirmationDialog.close();
+      returnFocus?.focus();
+      return;
+    }
+    if (!event.target.closest("[data-confirm-accept]") || !pendingConfirmation) return;
+    const { form, submitter } = pendingConfirmation;
+    pendingConfirmation = null;
+    confirmationDialog.close();
+    form.dataset.confirmed = "true";
+    form.requestSubmit(submitter);
+    queueMicrotask(() => delete form.dataset.confirmed);
+  });
+  confirmationDialog.addEventListener("close", () => {
+    if (!pendingConfirmation) return;
+    const returnFocus = pendingConfirmation.submitter;
+    pendingConfirmation = null;
+    returnFocus?.focus();
+  });
+
   document.addEventListener("click", event => {
     const back = event.target.closest("[data-legal-back]");
     if (!back) return;
