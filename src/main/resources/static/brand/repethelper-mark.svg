@@ -1,3 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 413" role="img" aria-label="RepetHelper">
-  <image href="repethelper-mark.png" width="512" height="413" preserveAspectRatio="xMidYMid meet"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="none" aria-hidden="true">
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M20 75V21h25.5c12.2 0 20.2 6.7 20.2 17.4 0 7-3.5 12.2-9.6 15l16 21.6H56.2L42.5 55.7H35V75H20Zm15-41h10.2c3.7 0 5.8 1.6 5.8 4.5S49 43 45.2 43H35v-9Z" fill="url(#a)"/>
+  <path d="M66 22v20H48v12h18v20H81V54h8V42h-8V22H66Z" fill="url(#b)"/>
+  <defs>
+    <linearGradient id="a" x1="18" y1="18" x2="72" y2="76" gradientUnits="userSpaceOnUse"><stop stop-color="#4F46E5"/><stop offset="1" stop-color="#7C3AED"/></linearGradient>
+    <linearGradient id="b" x1="48" y1="22" x2="91" y2="76" gradientUnits="userSpaceOnUse"><stop stop-color="#7378F2"/><stop offset="1" stop-color="#7C3AED"/></linearGradient>
+  </defs>
 </svg>

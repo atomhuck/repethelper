@@ -8,7 +8,7 @@
     <meta name="_csrf" th:content="${_csrf.token}">
     <meta name="_csrf_header" th:content="${_csrf.headerName}">
     <title th:text="${boardDisplayName + ' — RepetHelper'}">Доска занятия — RepetHelper</title>
-    <link rel="icon" type="image/png" th:href="@{/brand/repethelper-favicon.png(v=1)}">
+    <link rel="icon" type="image/svg+xml" th:href="@{/brand/repethelper-mark.svg}">
     <script th:src="@{/js/theme.js(v=3)}"></script>
     <link rel="stylesheet" th:href="@{/css/whiteboard.css(v=5)}">
     <link rel="stylesheet" th:href="@{/css/whiteboard-v2.css(v=1)}">
@@ -26,7 +26,7 @@
             <svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#arrow-left}"></use></svg>
         </a>
         <a class="board-brand desktop-only" th:href="@{/lessons/{id}(id=${lesson.id})}" aria-label="Вернуться к занятию">
-            <img th:src="@{/brand/repethelper-mark.png(v=1)}" alt=""><b>RepetHelper</b>
+            <img th:src="@{/brand/repethelper-mark.svg}" alt=""><b>RepetHelper</b>
         </a>
         <div class="board-title desktop-only">
             <strong id="board-title-text" th:text="${boardDisplayName}">Доска занятия</strong>
