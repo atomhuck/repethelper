@@ -2,7 +2,7 @@
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments :: head('Карточка пользователя')}"></head>
 <body class="control-page">
-<header class="topbar control-topbar"><a class="brand" th:href="@{/control}"><img th:src="@{/brand/repethelper-mark.svg}" alt=""><span>RepetHelper Control</span></a><nav class="nav-links"><a th:href="@{/control}">Обзор</a><a class="active" th:href="@{/control/users}">Пользователи</a></nav><form method="post" th:action="@{/control/sign-out}"><button class="button ghost" type="submit">Выйти</button></form></header>
+<header class="topbar control-topbar"><a class="brand" th:href="@{/control}"><img th:src="@{/brand/repethelper-mark.png(v=1)}" alt=""><span>RepetHelper Control</span></a><nav class="nav-links"><a th:href="@{/control}">Обзор</a><a class="active" th:href="@{/control/users}">Пользователи</a></nav><form method="post" th:action="@{/control/sign-out}"><button class="button ghost" type="submit">Выйти</button></form></header>
 <main class="page-shell control-shell">
     <a class="control-back" th:href="@{/control/users}">← Все пользователи</a>
     <section class="control-profile-heading"><span class="account-avatar" th:text="${#strings.substring(target.displayName,0,1)}"></span><div><p class="eyebrow" th:text="${target.role == T(ru.repethelper.domain.Role).TEACHER} ? 'Преподаватель' : 'Ученик'"></p><h1 th:text="${target.displayName}"></h1><p th:text="${target.email}"></p></div><span class="status-badge" th:text="${target.enabled} ? 'Активен' : 'Отключён'"></span></section>

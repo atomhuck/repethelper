@@ -203,6 +203,12 @@ h3 {
   font-weight: 680;
 }
 
+.brand img,
+.error-brand-logo,
+.board-brand img {
+  object-fit: contain;
+}
+
 .nav-links {
   gap: 2px;
   margin-left: 36px;

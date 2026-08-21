@@ -3,7 +3,7 @@
 <head th:replace="~{fragments :: head('Обновление аккаунта')}"></head>
 <body class="auth-page"><main class="auth-shell compact-auth">
     <section class="auth-card">
-        <a class="brand"><img class="brand-logo" th:src="@{/brand/repethelper-mark.svg}" alt=""><span>RepetHelper</span></a>
+        <a class="brand"><img class="brand-logo" th:src="@{/brand/repethelper-mark.png(v=1)}" alt=""><span>RepetHelper</span></a>
         <div><p class="eyebrow">Обновление сервиса</p><h1>Завершите настройку</h1><p class="lead">Укажите email для восстановления пароля и примите актуальные документы.</p></div>
         <div th:if="${error}" class="alert error" th:text="${error}"></div>
         <form th:action="@{/account/consent}" method="post" class="stack-form">

@@ -3,7 +3,7 @@
 <head th:replace="~{fragments :: head('Панель управления')}"></head>
 <body class="control-page">
 <header class="topbar control-topbar">
-    <a class="brand" th:href="@{/control}"><img th:src="@{/brand/repethelper-mark.svg}" alt=""><span>RepetHelper Control</span></a>
+    <a class="brand" th:href="@{/control}"><img th:src="@{/brand/repethelper-mark.png(v=1)}" alt=""><span>RepetHelper Control</span></a>
     <nav class="nav-links"><a class="active" th:href="@{/control}">Обзор</a><a th:href="@{/control/users}">Пользователи</a></nav>
     <form method="post" th:action="@{/control/sign-out}"><button class="button ghost" type="submit">Выйти</button></form>
 </header>

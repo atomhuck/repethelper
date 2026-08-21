@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#F6F7FB">
     <meta name="application-name" content="RepetHelper">
     <meta name="yandex-verification" content="732d53705767dd1b">
-    <link rel="icon" type="image/svg+xml" th:href="@{/brand/repethelper-mark.svg}">
+    <link rel="icon" type="image/png" th:href="@{/brand/repethelper-favicon.png(v=1)}">
     <title th:text="${title} + ' — RepetHelper'">RepetHelper</title>
     <script th:src="@{/js/theme.js(v=2)}"></script>
     <link rel="stylesheet" th:href="@{/css/app.css(v=11)}">
@@ -25,7 +25,7 @@
 <nav th:fragment="topNav(user, area)" class="topbar">
     <a class="brand" th:href="${user.role.name() == 'TEACHER'} ? @{/teacher} : @{/student}"
        aria-label="RepetHelper: на главную">
-        <img th:src="@{/brand/repethelper-mark.svg}" alt=""><span>RepetHelper</span>
+        <img th:src="@{/brand/repethelper-mark.png(v=1)}" alt=""><span>RepetHelper</span>
     </a>
     <div class="nav-links">
         <a th:if="${user.role.name() == 'TEACHER'}" th:href="@{/teacher}"
