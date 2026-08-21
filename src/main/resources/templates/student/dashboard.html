@@ -1,15 +1,22 @@
 <!doctype html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments :: head('Мои занятия')}"></head>
-<body>
+<body class="student-workspace-page">
 <nav th:replace="~{fragments :: topNav(${user}, 'dashboard')}"></nav>
 <main class="page container">
     <div th:if="${param.welcome}" class="alert success">Аккаунт создан. Теперь подключитесь к преподавателю.</div>
     <div th:if="${success}" class="alert success" th:text="${success}"></div><div th:if="${error}" class="alert error" th:text="${error}"></div>
     <header class="page-header"><div><p class="eyebrow">Кабинет ученика</p><h1 th:text="'Привет, ' + ${user.displayName} + '!'">Привет, ученик!</h1><p th:text="${accepted} ? 'Здесь общее расписание ваших занятий с преподавателями.' : 'Подключитесь к преподавателю, чтобы увидеть занятия.'"></p></div></header>
 
+    <section th:if="${accepted}" class="student-progress-summary" aria-label="Учебный прогресс">
+        <div><strong th:text="${progress.learning.completedLessons}">0</strong><span>проведено занятий</span></div>
+        <div><strong th:text="${progress.learning.submittedHomework}">0</strong><span>домашних работ сдано</span></div>
+        <div><strong th:text="${progress.activeTeachers}">0</strong><span>активных преподавателей</span></div>
+        <div><strong th:text="${progress.learning.boardCount}">0</strong><span>досок использовано</span></div>
+    </section>
+
     <section th:if="${accepted}" class="dashboard-grid">
-        <div th:replace="~{calendar :: calendarPanel(${calendar}, 'student')}">
+        <div th:replace="~{calendar :: calendarWorkspace}">
             <div class="panel-heading"><div><p class="eyebrow">Расписание</p><h2 th:text="${calendar.title}">Июль 2026</h2></div><div class="calendar-nav"><a th:href="@{/student(year=${calendar.previousYear},month=${calendar.previousMonth})}" aria-label="Предыдущий месяц"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#arrow-left}"></use></svg></a><a th:href="@{/student}">Сегодня</a><a th:href="@{/student(year=${calendar.nextYear},month=${calendar.nextMonth})}" aria-label="Следующий месяц"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#arrow-right}"></use></svg></a></div></div>
             <div class="calendar weekdays"><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span></div>
             <div class="calendar days"><div th:each="day : ${calendar.days}" class="calendar-day" th:classappend="${(!day.currentMonth ? ' muted' : (day.today ? ' today' : '')) + (day.hasUpcomingScheduledLessons ? ' has-lessons' : '') + (day.hasPastLessons ? ' past-lessons' : '')}"><span class="day-number" th:text="${day.date.dayOfMonth}">1</span><a th:each="lesson : ${day.lessons}" th:href="@{/lessons/{id}(id=${lesson.id})}" class="calendar-event" th:classappend="${lesson.status.name() == 'CANCELLED' ? 'cancelled' : (day.past(lesson) ? 'past' : '')}"><b th:text="${@timeView.time(lesson.startAt)}">17:00</b><span th:text="${lesson.status.name() == 'CANCELLED' ? 'Отменено' : lesson.teacher.displayName}">Преподаватель</span></a></div></div>

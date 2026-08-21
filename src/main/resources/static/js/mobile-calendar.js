@@ -2,7 +2,9 @@
   const mobile = window.matchMedia("(max-width: 640px)");
   const initialise = () => {
     if (!mobile.matches) return;
-    document.querySelectorAll(".calendar-panel").forEach(panel => {
+    document.querySelectorAll(".calendar-workspace.is-month").forEach(workspace => {
+      const panel = workspace.querySelector(".calendar-panel");
+      if (!panel) return;
       if (panel.dataset.mobileCalendarReady) return;
       const days = panel.querySelectorAll(".calendar.days .calendar-day:not(.muted)");
       if (!days.length) return;
@@ -12,7 +14,7 @@
       agenda.setAttribute("aria-live", "polite");
       panel.appendChild(agenda);
       const title = panel.querySelector("h2")?.textContent || "";
-      const nearestLesson = panel.closest(".dashboard-grid")?.querySelector(".side-panel .upcoming-item");
+      const nearestLesson = panel.closest("main")?.querySelector(".side-panel .upcoming-item, .workspace-agenda .upcoming-item");
       const show = (day, initial = false) => {
         days.forEach(item => item.classList.toggle("selected", item === day));
         const number = day.querySelector(".day-number")?.textContent || "";
@@ -37,16 +39,9 @@
         }
       };
       days.forEach(day => {
-        day.tabIndex = 0;
-        day.setAttribute("role", "button");
         day.addEventListener("click", event => {
-          if (!event.target.closest(".calendar-event")) show(day, day.classList.contains("today"));
-        });
-        day.addEventListener("keydown", event => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            show(day, day.classList.contains("today"));
-          }
+          if (event.target.closest("a")) return;
+          day.querySelector(".day-number")?.click();
         });
       });
       const today = [...days].find(day => day.classList.contains("today"));

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments :: head('Преподаватели')}"></head>
-<body>
+<body class="relationships-page">
 <nav th:replace="~{fragments :: topNav(${user}, 'teachers')}"></nav>
 <main class="page container narrow">
     <div th:if="${success}" class="alert success" th:text="${success}"></div>
@@ -30,7 +30,7 @@
 
     <section class="panel section-panel">
         <div class="panel-heading"><div><p class="eyebrow">Список</p><h2>Заявки и подключения</h2></div></div>
-        <div th:if="${requests.empty}" class="empty compact"><span>◎</span><p>Вы пока не отправляли заявок преподавателям.</p></div>
+        <div th:if="${requests.empty}" class="empty compact"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#users}"></use></svg><p>Вы пока не отправляли заявок преподавателям.</p></div>
         <div th:each="request : ${requests}" class="person-row">
             <span class="avatar cyan" th:text="${#strings.substring(request.teacher.displayName,0,1)}">П</span>
             <div>

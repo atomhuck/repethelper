@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments :: head('Удаление ученика')}"></head>
-<body>
+<body class="danger-page">
 <nav th:replace="~{fragments :: topNav(${user}, 'students')}"></nav>
 <main class="page container narrow">
     <header class="page-header"><div><p class="eyebrow">Необратимое действие</p><h1>Удалить ученика</h1><p>Аккаунт ученика сохранится, но все ваши общие данные будут удалены.</p></div></header>

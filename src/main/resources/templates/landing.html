@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Рабочее пространство для занятий')}"></head>
+<body class="landing-page">
+<header class="landing-header">
+    <a class="brand" th:href="@{/}" aria-label="RepetHelper: главная"><img th:src="@{/brand/repethelper-mark.svg}" alt=""><span>RepetHelper</span></a>
+    <nav aria-label="О продукте">
+        <a href="#possibilities">Возможности</a><a href="#teachers">Преподавателям</a><a href="#students">Ученикам</a><a href="#safety">Безопасность</a>
+    </nav>
+    <div class="landing-actions"><a class="button ghost" th:href="@{/login}">Войти</a><a class="button primary" th:href="@{/register}">Создать аккаунт</a></div>
+</header>
+<main>
+    <section class="landing-hero">
+        <div class="landing-hero-copy">
+            <p class="eyebrow">RepetHelper для преподавателей и учеников</p>
+            <h1>Спокойное рабочее пространство для занятий</h1>
+            <p class="lead">Расписание, материалы, домашняя работа, оплата и совместная доска собраны в понятный учебный процесс.</p>
+            <div class="hero-actions"><a class="button primary" th:href="@{/register}">Начать работу</a><a class="button secondary" th:href="@{/login}">У меня уже есть аккаунт</a></div>
+            <p class="hero-note">Без лишних вкладок. Важное остаётся рядом с занятием.</p>
+        </div>
+        <div class="hero-scene" aria-label="Расписание и материалы RepetHelper">
+            <div class="scene-calendar"><span class="scene-label">Сегодня</span><strong>3 занятия</strong><div><i></i><span>14:00 · Алгебра</span></div><div><i></i><span>17:00 · Информатика</span></div></div>
+            <img th:src="@{/brand/raccoon-helper.svg}" alt="Енот-помощник держит учебный план">
+            <div class="scene-note"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#file}"></use></svg><span><strong>Материалы готовы</strong><small>Конспект и домашняя работа</small></span></div>
+        </div>
+    </section>
+
+    <section class="landing-strip" aria-label="Основные возможности"><span>Расписание</span><span>Карточки учеников</span><span>Домашняя работа</span><span>Совместная доска</span><span>Финансы</span></section>
+
+    <section id="possibilities" class="landing-section how-section">
+        <header><p class="eyebrow">Один понятный процесс</p><h2>От договорённости до результата занятия</h2><p>Каждый следующий шаг находится там, где вы ожидаете его увидеть.</p></header>
+        <ol class="process-list">
+            <li><span>01</span><div><h3>Подключитесь</h3><p>Преподаватель отправляет персональную ссылку, ученик подтверждает связь.</p></div></li>
+            <li><span>02</span><div><h3>Назначьте занятие</h3><p>Разовая встреча или конечная серия сразу появляются в календаре.</p></div></li>
+            <li><span>03</span><div><h3>Работайте вместе</h3><p>Звонок, материалы, файлы и доска привязаны к конкретному занятию.</p></div></li>
+            <li><span>04</span><div><h3>Сохраняйте историю</h3><p>Домашняя работа и результаты остаются в карточке ученика.</p></div></li>
+        </ol>
+    </section>
+
+    <section class="landing-section product-demo">
+        <div class="demo-copy"><p class="eyebrow">Рабочий ритм</p><h2>Видно не больше, чем нужно сейчас</h2><p>Неделя помогает управлять временем, карточка ученика — подготовиться, а история — продолжить с того места, где остановились.</p><ul><li>Неделя и месяц в одном расписании</li><li>Материалы привязаны к уроку</li><li>Статусы дают короткую обратную связь</li></ul></div>
+        <div class="demo-workspace" aria-hidden="true">
+            <div class="demo-toolbar"><b>Неделя 17–23 августа</b><span>Сегодня</span></div>
+            <div class="demo-days"><span>Пн<strong>17</strong></span><span>Вт<strong>18</strong></span><span class="active">Ср<strong>19</strong></span><span>Чт<strong>20</strong></span><span>Пт<strong>21</strong></span></div>
+            <div class="demo-grid"><i></i><i></i><i></i><i></i><i></i><div class="demo-lesson one">11:00<br><b>Математика</b></div><div class="demo-lesson two">16:00<br><b>Информатика</b></div></div>
+        </div>
+    </section>
+
+    <section class="audience-grid">
+        <article id="teachers"><p class="eyebrow">Преподавателям</p><h2>Порядок без ручной рутины</h2><p>Ученики, расписание, абонементы и оплаты остаются частью одного рабочего пространства.</p><a th:href="@{/register}">Создать аккаунт преподавателя <svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#arrow-right}"></use></svg></a></article>
+        <article id="students"><p class="eyebrow">Ученикам</p><h2>Понятно, что делать дальше</h2><p>Ближайшее занятие, домашняя работа, материалы и доска доступны без поиска по чатам.</p><a th:href="@{/register}">Создать аккаунт ученика <svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#arrow-right}"></use></svg></a></article>
+    </section>
+
+    <section id="safety" class="landing-section safety-section">
+        <div><p class="eyebrow">Приватность по умолчанию</p><h2>Учебные и финансовые данные разделены</h2></div>
+        <div class="safety-points"><p><strong>Ученик видит только своё.</strong><span>Личные заметки и внутренние финансовые сведения остаются у преподавателя.</span></p><p><strong>Каждая роль ограничена.</strong><span>Сервер повторно проверяет владельца занятия, файлов и доски.</span></p><p><strong>Без рекламных трекеров.</strong><span>Рабочая часть продукта не зависит от внешних шрифтов и CDN.</span></p></div>
+    </section>
+
+    <section class="landing-section faq-section"><header><p class="eyebrow">Коротко о важном</p><h2>Частые вопросы</h2></header><div><details><summary>Нужно ли устанавливать приложение?</summary><p>Нет. RepetHelper работает в современном браузере на компьютере и телефоне.</p></details><details><summary>Можно ли работать с несколькими преподавателями?</summary><p>Да. Ученик видит общее расписание, при этом данные разных преподавателей не смешиваются.</p></details><details><summary>Что получает ученик?</summary><p>Своё расписание, материалы, домашнюю работу, доски и сводку абонементов без внутренней стоимости.</p></details></div></section>
+
+    <section class="landing-cta"><img th:src="@{/brand/raccoon-helper.svg}" alt="" aria-hidden="true"><div><h2>Соберите занятия в одном спокойном пространстве</h2><p>Начните с ближайшего урока — остальная история сформируется естественно.</p></div><a class="button primary" th:href="@{/register}">Создать аккаунт</a></section>
+</main>
+<footer class="landing-footer"><a class="brand" th:href="@{/}"><img th:src="@{/brand/repethelper-mark.svg}" alt=""><span>RepetHelper</span></a><div><a th:href="@{/legal/terms}">Условия</a><a th:href="@{/legal/privacy}">Конфиденциальность</a><a th:href="@{/legal/personal-data}">Персональные данные</a></div><span>© RepetHelper</span></footer>
+</body>
+</html>

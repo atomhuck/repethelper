@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments :: head('Пользовательское соглашение')}"></head>
-<body><main class="legal-page container narrow">
+<body class="legal-shell"><main class="legal-page container narrow">
     <nav class="legal-page-nav" aria-label="Навигация документа">
         <a class="brand" th:href="${legalHome}"><img class="brand-logo" th:src="@{/brand/repethelper-mark.svg}" alt=""><span>RepetHelper</span></a>
         <a class="button secondary compact" th:href="${legalHome}" data-legal-back><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#arrow-left}"></use></svg>Назад</a>

@@ -1,14 +1,14 @@
 <!doctype html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments :: head('Карточка ученика')}"></head>
-<body>
+<body class="student-workspace-page">
 <nav th:replace="~{fragments :: topNav(${user}, 'students')}"></nav>
 <main class="page container student-profile-page">
     <div th:if="${success}" class="alert success" th:text="${success}"></div>
     <div th:if="${error}" class="alert error" th:text="${error}"></div>
 
     <a class="back-link" th:href="@{/teacher/students}"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#arrow-left}"></use></svg>Все ученики</a>
-    <header class="student-profile-hero panel">
+    <header class="student-profile-hero panel student-workspace-hero">
         <div class="student-profile-identity">
             <span class="avatar cyan student-profile-avatar" th:text="${#strings.substring(student.displayName,0,1)}">А</span>
             <div>
@@ -36,7 +36,14 @@
         </div>
     </header>
 
-    <section class="panel student-description-card">
+    <section class="learning-progress" aria-label="Прогресс ученика">
+        <div class="progress-stat"><strong th:text="${overview.progress.completedLessons}">0</strong><span>проведено занятий</span></div>
+        <div class="progress-stat"><strong th:text="${overview.progress.submittedHomework}">0</strong><span>домашних работ сдано</span></div>
+        <div class="progress-stat"><strong th:text="${overview.progress.boardCount}">0</strong><span>досок использовано</span></div>
+        <div class="progress-milestones"><span th:each="milestone : ${overview.progress.milestones}" th:classappend="${milestone.reached} ? ' reached' : ''"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#check}"></use></svg><span th:text="${milestone.label}">Первое занятие</span></span></div>
+    </section>
+
+    <section class="panel student-description-card student-workspace-section">
         <div class="panel-heading">
             <div><p class="eyebrow">Только для преподавателя</p><h2>Описание ученика</h2></div>
             <span class="private-badge">Видно только вам</span>
@@ -49,7 +56,7 @@
         </form>
     </section>
 
-    <section th:if="${subscriptionEnabled}" class="panel subscription-section">
+    <section th:if="${subscriptionEnabled}" class="panel subscription-section student-workspace-section">
         <div class="panel-heading subscription-heading">
             <div><p class="eyebrow">Предоплаченные занятия · только для преподавателя</p><h2>Абонементы</h2></div>
             <details class="subscription-create-popover">
@@ -102,7 +109,7 @@
         </div>
     </section>
 
-    <section class="student-overview-grid">
+    <section class="student-overview-grid student-learning-stream" aria-label="Учебный прогресс ученика">
         <article class="panel student-overview-card">
             <div class="panel-heading"><div><p class="eyebrow" th:text="${overview.nearestInProgress() ? 'Сейчас' : 'Дальше по расписанию'}">Дальше по расписанию</p><h2>Ближайшее занятие</h2></div></div>
             <div th:if="${overview.nearest == null}" class="empty compact"><p>Ближайших занятий пока нет.</p></div>
@@ -120,7 +127,7 @@
                 </div>
                 <div class="row-actions">
                     <a class="button secondary" th:href="@{/lessons/{id}(id=${overview.nearest.id},from='student')}">Открыть занятие</a>
-                    <a th:if="${overview.nearest.meetingUrl != null}" class="button primary" th:href="${overview.nearest.meetingUrl}" target="_blank" rel="noopener noreferrer">К звонку ↗</a>
+                    <a th:if="${overview.nearest.meetingUrl != null}" class="button primary" th:href="${overview.nearest.meetingUrl}" target="_blank" rel="noopener noreferrer">К звонку <svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#external-link}"></use></svg></a>
                 </div>
             </div>
         </article>
@@ -207,7 +214,7 @@
         </article>
     </section>
 
-    <section class="panel student-boards-preview">
+    <section class="panel student-boards-preview student-workspace-section">
         <div class="student-boards-preview-copy">
             <span class="material-icon violet"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#board}"></use></svg></span>
             <div><p class="eyebrow">Совместная работа</p><h2>Доски занятий</h2><p th:if="${overview.previous != null}" th:text="${'Последнее проведённое занятие: ' + @timeView.dateTime(overview.previous.startAt)}">Последнее занятие</p><p th:if="${overview.previous == null}">После первого проведённого занятия здесь можно будет открыть его доску.</p></div>
@@ -218,7 +225,7 @@
         </div>
     </section>
 
-    <section class="panel section-panel student-lessons-section">
+    <section class="panel section-panel student-lessons-section student-workspace-section">
         <div class="panel-heading"><div><p class="eyebrow">Расписание</p><h2>Предстоящие <span class="count" th:text="${overview.upcoming.totalElements}">0</span></h2></div></div>
         <div th:if="${overview.upcoming.content.empty}" class="empty compact"><p>Предстоящих занятий нет.</p></div>
         <a th:each="row : ${overview.upcoming.content}" class="student-lesson-row" th:href="@{/lessons/{id}(id=${row.lesson.id},from='student')}">
@@ -236,7 +243,7 @@
         </nav>
     </section>
 
-    <section class="panel section-panel student-lessons-section">
+    <section class="panel section-panel student-lessons-section student-workspace-section">
         <div class="panel-heading"><div><p class="eyebrow">Архив</p><h2>История <span class="count" th:text="${overview.history.totalElements}">0</span></h2></div></div>
         <div th:if="${overview.history.content.empty}" class="empty compact"><span>○</span><p>История занятий пока пуста.</p></div>
         <a th:each="row : ${overview.history.content}" class="student-lesson-row history-row"

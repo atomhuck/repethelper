@@ -47,6 +47,10 @@ public interface WhiteboardRepository extends JpaRepository<Whiteboard, Long> {
 
     long countByLessonIn(Collection<Lesson> lessons);
 
+    @Query("select count(b) from Whiteboard b where b.lesson.student = :student and " +
+            "exists (select o.id from WhiteboardObject o where o.board = b and o.deletedAt is null)")
+    long countActiveBoardsForStudent(@Param("student") User student);
+
     @EntityGraph(attributePaths = {"lesson", "lesson.student", "lesson.teacher"})
     @Query("select b from Whiteboard b where b.lesson.teacher = :teacher and b.lesson.student = :student " +
             "and b.lesson.status <> :cancelled and exists (select o.id from WhiteboardObject o " +

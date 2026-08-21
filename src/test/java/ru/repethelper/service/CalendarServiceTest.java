@@ -56,4 +56,40 @@ class CalendarServiceTest {
                     assertThat(day.past(lesson)).isTrue();
                 });
     }
+
+    @Test void buildsMondayFirstWeekAndExpandsVisibleHours() {
+        Clock clock = Clock.fixed(Instant.parse("2026-08-19T09:30:00Z"), ZoneOffset.UTC);
+        CalendarService service = new CalendarService("Europe/Moscow", clock);
+        User teacher = new User("teacher", "hash", "Преподаватель", Role.TEACHER);
+        User student = new User("student", "hash", "Ученик", Role.STUDENT);
+        Lesson early = new Lesson(teacher, student, Instant.parse("2026-08-17T03:30:00Z"), 60);
+        Lesson late = new Lesson(teacher, student, Instant.parse("2026-08-21T19:15:00Z"), 90);
+
+        var week = service.buildWeek(LocalDate.of(2026, 8, 19), List.of(early, late));
+
+        assertThat(week.start()).isEqualTo(LocalDate.of(2026, 8, 17));
+        assertThat(week.end()).isEqualTo(LocalDate.of(2026, 8, 23));
+        assertThat(week.days()).hasSize(7);
+        assertThat(week.startHour()).isEqualTo(6);
+        assertThat(week.endHour()).isEqualTo(24);
+    }
+
+    @Test void givesOverlappingLessonsSeparateStableColumns() {
+        Clock clock = Clock.fixed(Instant.parse("2026-08-17T06:00:00Z"), ZoneOffset.UTC);
+        CalendarService service = new CalendarService("Europe/Moscow", clock);
+        User teacher = new User("teacher", "hash", "Преподаватель", Role.TEACHER);
+        User student = new User("student", "hash", "Ученик", Role.STUDENT);
+        Lesson first = new Lesson(teacher, student, Instant.parse("2026-08-17T07:00:00Z"), 90);
+        Lesson second = new Lesson(teacher, student, Instant.parse("2026-08-17T07:30:00Z"), 60);
+        Lesson third = new Lesson(teacher, student, Instant.parse("2026-08-17T09:00:00Z"), 60);
+
+        var lessons = service.buildWeek(LocalDate.of(2026, 8, 17), List.of(first, second, third))
+                .days().getFirst().lessons();
+
+        assertThat(lessons).hasSize(3);
+        assertThat(lessons.get(0).columns()).isEqualTo(2);
+        assertThat(lessons.get(1).columns()).isEqualTo(2);
+        assertThat(lessons.get(0).column()).isNotEqualTo(lessons.get(1).column());
+        assertThat(lessons.get(2).columns()).isEqualTo(1);
+    }
 }

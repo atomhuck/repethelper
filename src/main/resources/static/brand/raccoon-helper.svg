@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 420" role="img">
+  <title>Енот-помощник RepetHelper с блокнотом</title>
+  <g fill="none" fill-rule="evenodd">
+    <path fill="#EEECE7" d="M78 341c0-25 20-45 45-45h278c25 0 45 20 45 45v18H78z"/>
+    <path fill="#DCD8CF" d="M104 359h322v12H104z"/>
+    <path fill="#4F46E5" d="M187 335h148v36H187z"/>
+    <path fill="#FAFAF8" stroke="#1F2937" stroke-width="8" stroke-linejoin="round" d="m184 110-43-46 3 77c-20 26-31 59-31 96 0 78 65 125 147 125s147-47 147-125c0-37-11-70-31-96l3-77-44 46c-22-12-48-18-75-18-28 0-54 6-76 18z"/>
+    <path fill="#6B7280" d="m158 91-7-11 2 42c9-11 19-20 31-28zM362 91l7-11-2 42c-9-11-19-20-31-28z"/>
+    <path fill="#697386" d="M127 223c0-58 58-105 133-105s133 47 133 105c0 38-25 70-63 89l-20-83-50 41-50-41-20 83c-38-19-63-51-63-89z"/>
+    <path fill="#252B36" d="M159 211c12-31 45-48 85-34l16 10 16-10c40-14 73 3 85 34-7 36-44 58-78 48l-23-13-23 13c-34 10-71-12-78-48z"/>
+    <ellipse cx="211" cy="211" fill="#FAFAF8" rx="30" ry="23"/>
+    <ellipse cx="309" cy="211" fill="#FAFAF8" rx="30" ry="23"/>
+    <circle cx="216" cy="212" r="9" fill="#121620"/>
+    <circle cx="304" cy="212" r="9" fill="#121620"/>
+    <circle cx="219" cy="209" r="3" fill="#FFF"/>
+    <circle cx="307" cy="209" r="3" fill="#FFF"/>
+    <path fill="#121620" d="M245 241c0-9 7-15 15-15s15 6 15 15c0 8-7 14-15 14s-15-6-15-14z"/>
+    <path stroke="#121620" stroke-width="7" stroke-linecap="round" d="M260 253v13m0 0c-10 0-17-4-22-11m22 11c10 0 17-4 22-11"/>
+    <path fill="#F3C6A3" d="M122 288c16-9 31-5 41 8l16 24-28 16-25-17c-12-8-14-23-4-31zM398 288c-16-9-31-5-41 8l-16 24 28 16 25-17c12-8 14-23 4-31z"/>
+    <path fill="#FFF" stroke="#1F2937" stroke-width="7" stroke-linejoin="round" d="M167 278h186v94H167z"/>
+    <path stroke="#4F46E5" stroke-width="8" stroke-linecap="round" d="M194 309h76m-76 22h126m-126 22h92"/>
+    <path fill="#16A085" d="m321 295 11 8 15-20 9 7-23 31-21-16z"/>
+    <path fill="#F4B942" d="M87 105h20v20H87zm326 58h14v14h-14z"/>
+    <path fill="#4F46E5" d="m101 165 7 15 15 7-15 7-7 15-7-15-15-7 15-7z"/>
+  </g>
+</svg>

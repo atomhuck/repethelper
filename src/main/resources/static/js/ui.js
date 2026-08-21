@@ -128,6 +128,7 @@
       if (dialog && !dialog.open) {
         dialog.__returnFocus = opener;
         dialog.showModal();
+        document.body.classList.add("dialog-open");
       }
       return;
     }
@@ -142,7 +143,10 @@
     if (!logout) return;
     const dialog = document.querySelector("[data-logout-dialog]");
     closeMenu(logout.closest("details[data-menu]"));
-    if (dialog && !dialog.open) dialog.showModal();
+    if (dialog && !dialog.open) {
+      dialog.showModal();
+      document.body.classList.add("dialog-open");
+    }
   });
 
   document.querySelectorAll("dialog").forEach(dialog => {
@@ -150,6 +154,7 @@
       if (event.target === dialog) dialog.close();
     });
     dialog.addEventListener("close", () => {
+      if (!document.querySelector("dialog[open]")) document.body.classList.remove("dialog-open");
       dialog.__returnFocus?.focus();
       dialog.__returnFocus = null;
     });
@@ -182,6 +187,7 @@
     pendingConfirmation = { form, submitter: event.submitter || null };
     confirmationDialog.querySelector("[data-confirm-message]").textContent = form.dataset.confirm;
     confirmationDialog.showModal();
+    document.body.classList.add("dialog-open");
     confirmationDialog.querySelector("[data-confirm-accept]").focus();
   });
 
@@ -202,6 +208,7 @@
     queueMicrotask(() => delete form.dataset.confirmed);
   });
   confirmationDialog.addEventListener("close", () => {
+    if (!document.querySelector("dialog[open]")) document.body.classList.remove("dialog-open");
     if (!pendingConfirmation) return;
     const returnFocus = pendingConfirmation.submitter;
     pendingConfirmation = null;

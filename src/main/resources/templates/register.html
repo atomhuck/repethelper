@@ -4,14 +4,11 @@
 <body class="auth-page">
 <main class="auth-shell">
     <section class="auth-copy">
-        <a class="brand large" th:href="@{/login}"><img class="brand-logo" th:src="@{/brand/repethelper-mark.svg}" alt=""><span>RepetHelper</span></a>
+        <a class="brand large" th:href="@{/}"><img class="brand-logo" th:src="@{/brand/repethelper-mark.svg}" alt=""><span>RepetHelper</span></a>
         <p class="eyebrow">Стартуем</p>
         <h1>Занятия, материалы и общая доска в одном месте.</h1>
         <p class="lead">Создайте аккаунт ученика или преподавателя. Преподаватель сразу получит уникальный код приглашения.</p>
-        <div class="auth-feature-card" aria-hidden="true">
-            <span class="auth-feature-icon"><svg class="ui-icon"><use th:href="@{/brand/ui-icons.svg#shield}"></use></svg></span>
-            <div><b>Спокойный старт</b><span>Регистрация занимает пару минут, а данные доступны только участникам занятий.</span></div>
-        </div>
+        <img class="auth-mascot" th:src="@{/brand/raccoon-helper.svg}" alt="" aria-hidden="true">
     </section>
     <section class="auth-card">
         <div><p class="eyebrow">Новый аккаунт</p><h2>Регистрация</h2></div>

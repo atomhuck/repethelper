@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments :: head('Доски ученика')}"></head>
-<body>
+<body class="boards-page">
 <nav th:replace="~{fragments :: topNav(${user}, 'students')}"></nav>
 <main class="page container narrow student-boards-page">
     <a class="back-link" th:href="@{/teacher/students/{id}(id=${student.id})}"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#arrow-left}"></use></svg>К карточке ученика</a>

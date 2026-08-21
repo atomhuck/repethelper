@@ -9,7 +9,7 @@
     document.documentElement.dataset.theme = theme;
     document.documentElement.style.colorScheme = theme;
     document.querySelector('meta[name="theme-color"]')
-      ?.setAttribute("content", theme === "dark" ? "#0D1020" : "#F6F7FB");
+      ?.setAttribute("content", theme === "dark" ? "#151716" : "#F6F5F2");
     document.querySelectorAll("[data-theme-choice]").forEach(item => {
       item.setAttribute("aria-pressed", String(item.dataset.themeChoice === choice()));
     });

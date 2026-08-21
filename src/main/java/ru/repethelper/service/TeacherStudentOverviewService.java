@@ -9,6 +9,7 @@ import ru.repethelper.repository.AttachmentRepository;
 import ru.repethelper.repository.ConnectionRequestRepository;
 import ru.repethelper.repository.LessonRepository;
 import ru.repethelper.repository.WhiteboardRepository;
+import ru.repethelper.web.view.LearningProgressView;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -75,6 +76,21 @@ public class TeacherStudentOverviewService {
                 : attachments.findByLessonInOrderByCreatedAtAsc(visibleLessons).stream()
                     .collect(Collectors.groupingBy(item -> item.getLesson().getId(), LinkedHashMap::new, Collectors.toList()));
 
+        long boardCount = whiteboards.countVisibleForTeacherAndStudent(teacher, student, LessonStatus.CANCELLED);
+        long completedLessons = all.stream()
+                .filter(item -> item.getStatus() != LessonStatus.CANCELLED && !item.getEndAt().isAfter(now))
+                .count();
+        long submittedHomework = all.stream()
+                .filter(item -> item.getHomeworkSubmissionStatus() == HomeworkSubmissionStatus.SUBMITTED)
+                .count();
+        LearningProgressView progress = new LearningProgressView(completedLessons, submittedHomework, boardCount,
+                List.of(
+                        new LearningProgressView.Milestone("Первое занятие", completedLessons >= 1),
+                        new LearningProgressView.Milestone("10 проведённых занятий", completedLessons >= 10),
+                        new LearningProgressView.Milestone("Первая выполненная домашняя работа", submittedHomework >= 1),
+                        new LearningProgressView.Milestone("Первая совместная доска", boardCount >= 1)
+                ));
+
         return new Overview(
                 relation,
                 nearest,
@@ -83,7 +99,8 @@ public class TeacherStudentOverviewService {
                 files(previous, AttachmentCategory.LESSON_NOTES, filesByLesson),
                 toPage(upcomingSelection, filesByLesson),
                 toPage(historySelection, filesByLesson),
-                whiteboards.countVisibleForTeacherAndStudent(teacher, student, LessonStatus.CANCELLED),
+                boardCount,
+                progress,
                 now
         );
     }
@@ -146,7 +163,8 @@ public class TeacherStudentOverviewService {
 
     public record Overview(ConnectionRequest relation, Lesson nearest, Lesson previous,
                            List<Attachment> homeworkFiles, List<Attachment> materialFiles,
-                           LessonPage upcoming, LessonPage history, long boardCount, Instant now) {
+                           LessonPage upcoming, LessonPage history, long boardCount,
+                           LearningProgressView progress, Instant now) {
         public boolean nearestInProgress() {
             return nearest != null && !nearest.getStartAt().isAfter(now) && nearest.getEndAt().isAfter(now);
         }

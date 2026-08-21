@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments :: head('Финансы')}"></head>
-<body>
+<body class="finance-page">
 <nav th:replace="~{fragments :: topNav(${user}, 'finances')}"></nav>
 <main class="page container finance-dashboard" data-finance-page
       th:data-selected-month="${overview.selectedMonth}" th:data-current-month="${overview.currentMonth}">

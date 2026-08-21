@@ -12,7 +12,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import ru.repethelper.domain.*;
 import ru.repethelper.service.*;
 import ru.repethelper.web.form.*;
+import ru.repethelper.web.view.CalendarMode;
 import java.time.*;
+import java.util.List;
 
 @Controller
 @RequestMapping("/teacher")
@@ -36,9 +38,14 @@ public class TeacherController {
     @GetMapping
     String dashboard(Authentication auth, @RequestParam(required = false) Integer year,
                      @RequestParam(required = false) Integer month,
+                     @RequestParam(required = false) String view,
+                     @RequestParam(required = false) String date,
                      @RequestParam(required = false) Long studentId, Model model) {
         User teacher = current(auth);
-        YearMonth selected = safeMonth(year, month);
+        YearMonth requestedMonth = year == null || month == null ? null : safeMonth(year, month);
+        LocalDate selectedDate = safeDate(date, requestedMonth);
+        YearMonth selected = requestedMonth == null ? YearMonth.from(selectedDate) : requestedMonth;
+        CalendarMode calendarMode = calendarMode(view, year, month);
         var profile = profiles.requireFor(teacher);
         var profileForm = new TeacherProfileForm();
         profileForm.setDisplayName(teacher.getDisplayName());
@@ -49,6 +56,7 @@ public class TeacherController {
             model.addAttribute("selectedStudentId", studentId);
         }
         model.addAttribute("user", teacher);
+        model.addAttribute("viewer", "teacher");
         model.addAttribute("profile", profile);
         model.addAttribute("profileForm", profileForm);
         model.addAttribute("inviteUrl", baseUrl + "/invite/" + profile.getInviteCode());
@@ -61,19 +69,27 @@ public class TeacherController {
         var upcoming = lessons.upcoming(teacher);
         model.addAttribute("upcoming", upcoming);
         model.addAttribute("upcomingPreview", upcoming.stream().limit(4).toList());
-        model.addAttribute("calendar", calendars.build(selected, lessons.forMonth(teacher, selected)));
+        List<Lesson> visibleLessons = addCalendarModels(model, teacher, selected, selectedDate, calendarMode);
+        addSelectedDay(model, visibleLessons, selectedDate);
         return "teacher/dashboard";
     }
 
     @GetMapping("/calendar")
     String calendarFragment(Authentication auth, @RequestParam(required = false) Integer year,
-                            @RequestParam(required = false) Integer month, Model model, HttpServletResponse response) {
+                            @RequestParam(required = false) Integer month,
+                            @RequestParam(required = false) String view,
+                            @RequestParam(required = false) String date,
+                            Model model, HttpServletResponse response) {
         User teacher = current(auth);
-        YearMonth selected = safeMonth(year, month);
+        YearMonth requestedMonth = year == null || month == null ? null : safeMonth(year, month);
+        LocalDate selectedDate = safeDate(date, requestedMonth);
+        YearMonth selected = requestedMonth == null ? YearMonth.from(selectedDate) : requestedMonth;
+        CalendarMode calendarMode = calendarMode(view, year, month);
         response.setHeader("Cache-Control", "no-store");
-        model.addAttribute("calendar", calendars.build(selected, lessons.forMonth(teacher, selected)));
+        List<Lesson> visibleLessons = addCalendarModels(model, teacher, selected, selectedDate, calendarMode);
+        addSelectedDay(model, visibleLessons, selectedDate);
         model.addAttribute("viewer", "teacher");
-        return "calendar :: calendarPanel";
+        return "calendar :: calendarWorkspace";
     }
 
     @GetMapping("/upcoming")
@@ -181,6 +197,34 @@ public class TeacherController {
         if (year == null || month == null) return YearMonth.now(lessons.zone());
         try { return YearMonth.of(Math.max(2020, Math.min(2100, year)), month); }
         catch (DateTimeException ex) { return YearMonth.now(lessons.zone()); }
+    }
+
+    private CalendarMode calendarMode(String view, Integer year, Integer month) {
+        if ((view == null || view.isBlank()) && year != null && month != null) {
+            return CalendarMode.MONTH;
+        }
+        return CalendarMode.from(view);
+    }
+    private LocalDate safeDate(String value, YearMonth fallbackMonth) {
+        if (value == null || value.isBlank()) {
+            return fallbackMonth == null ? LocalDate.now(lessons.zone()) : fallbackMonth.atDay(1);
+        }
+        try { return LocalDate.parse(value); }
+        catch (DateTimeException ex) { return fallbackMonth == null ? LocalDate.now(lessons.zone()) : fallbackMonth.atDay(1); }
+    }
+    private List<Lesson> addCalendarModels(Model model, User user, YearMonth month, LocalDate date, CalendarMode mode) {
+        List<Lesson> monthLessons = lessons.forMonth(user, month);
+        List<Lesson> weekLessons = mode == CalendarMode.WEEK ? lessons.forWeek(user, date) : List.of();
+        model.addAttribute("calendar", calendars.build(month, monthLessons));
+        model.addAttribute("weekCalendar", calendars.buildWeek(date, weekLessons));
+        model.addAttribute("calendarMode", mode);
+        model.addAttribute("selectedDate", date);
+        return mode == CalendarMode.WEEK ? weekLessons : monthLessons;
+    }
+    private void addSelectedDay(Model model, List<Lesson> visibleLessons, LocalDate date) {
+        model.addAttribute("selectedDayLessons", visibleLessons.stream()
+                .filter(lesson -> lesson.getStartAt().atZone(lessons.zone()).toLocalDate().equals(date))
+                .toList());
     }
     private String error(RedirectAttributes flash, String message, String target) { flash.addFlashAttribute("error", message); return "redirect:" + target; }
 }

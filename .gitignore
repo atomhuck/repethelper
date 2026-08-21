@@ -9,3 +9,6 @@ target/
 data/
 uploads/
 *.log
+node_modules/
+test-results/
+playwright-report/

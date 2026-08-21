@@ -90,18 +90,18 @@ public class NotificationMailService {
                 </div>
                 """.formatted(HtmlUtils.htmlEscape(ctaUrl));
         return emailShell(subject, """
-                <div style="color:#3F455A;font-size:15px;line-height:1.7">%s</div>
+                <div style="color:#45443F;font-size:15px;line-height:1.7">%s</div>
                 %s
                 """.formatted(content, cta));
     }
 
     static String renderCodeHtml(String subject, String intro, String code, String note) {
         return emailShell(subject, """
-                <p style="margin:0 0 18px;color:#3F455A;font-size:15px;line-height:1.65">%s</p>
-                <div style="margin:0 0 18px;padding:18px;border:1px solid #D9DCE8;border-radius:14px;background:#F0F1F8;text-align:center">
+                <p style="margin:0 0 18px;color:#45443F;font-size:15px;line-height:1.65">%s</p>
+                <div style="margin:0 0 18px;padding:18px;border:1px solid #DEDBD4;border-radius:10px;background:#F1F0EC;text-align:center">
                   <span style="font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:30px;font-weight:800;letter-spacing:7px;color:#4F46E5">%s</span>
                 </div>
-                <p style="margin:0;color:#62677A;font-size:13px;line-height:1.55">%s</p>
+                <p style="margin:0;color:#73716A;font-size:13px;line-height:1.55">%s</p>
                 """.formatted(HtmlUtils.htmlEscape(intro), HtmlUtils.htmlEscape(code), HtmlUtils.htmlEscape(note)));
     }
 
@@ -109,21 +109,21 @@ public class NotificationMailService {
         return """
                 <!doctype html>
                 <html lang="ru">
-                <body style="margin:0;padding:0;background:#F6F7FB;font-family:Arial,'Segoe UI',sans-serif;color:#171A2B">
-                  <table role="presentation" width="100%%" cellspacing="0" cellpadding="0" style="background:#F6F7FB">
+                <body style="margin:0;padding:0;background:#F6F5F2;font-family:Arial,'Segoe UI',sans-serif;color:#1D1D1B">
+                  <table role="presentation" width="100%%" cellspacing="0" cellpadding="0" style="background:#F6F5F2">
                     <tr><td align="center" style="padding:28px 14px">
                       <table role="presentation" width="100%%" cellspacing="0" cellpadding="0" style="max-width:600px">
                         <tr><td style="padding:0 4px 16px">
                           <table role="presentation" cellspacing="0" cellpadding="0"><tr>
-                            <td style="width:34px;height:34px;border-radius:10px;background:#4F46E5;color:#FFFFFF;text-align:center;font-weight:800">R</td>
-                            <td style="padding-left:10px;font-size:17px;font-weight:800;color:#171A2B">RepetHelper</td>
+                            <td style="width:34px;height:34px;border-radius:8px;background:#4F46E5;color:#FFFFFF;text-align:center;font-weight:800">R</td>
+                            <td style="padding-left:10px;font-size:17px;font-weight:700;color:#1D1D1B">RepetHelper</td>
                           </tr></table>
                         </td></tr>
-                        <tr><td style="padding:28px;border:1px solid #D9DCE8;border-radius:18px;background:#FFFFFF">
-                          <h1 style="margin:0 0 20px;font-size:24px;line-height:1.25;letter-spacing:-.4px;color:#171A2B">%s</h1>
+                        <tr><td style="padding:28px;border:1px solid #DEDBD4;border-radius:14px;background:#FFFFFF">
+                          <h1 style="margin:0 0 20px;font-size:24px;line-height:1.25;letter-spacing:-.4px;color:#1D1D1B">%s</h1>
                           %s
                         </td></tr>
-                        <tr><td style="padding:16px 4px 0;color:#62677A;font-size:12px;line-height:1.5">
+                        <tr><td style="padding:16px 4px 0;color:#73716A;font-size:12px;line-height:1.5">
                           Это сервисное письмо RepetHelper. Не пересылайте коды подтверждения другим людям.
                         </td></tr>
                       </table>

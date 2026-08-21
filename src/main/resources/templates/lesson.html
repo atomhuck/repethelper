@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments :: head('Занятие')}"></head>
-<body>
+<body class="lesson-page">
 <nav th:replace="~{fragments :: topNav(${user}, 'dashboard')}"></nav>
 <main class="page container narrow">
     <div th:if="${success}" class="alert success" th:text="${success}"></div><div th:if="${error}" class="alert error" th:text="${error}"></div>
@@ -39,7 +39,7 @@
             <p>Подключайтесь к звонку в назначенное время.</p>
         </div>
         <a th:if="${lesson.meetingUrl != null}" class="lesson-call-button is-ready" th:href="${lesson.meetingUrl}"
-           target="_blank" rel="noopener noreferrer">Перейти к звонку <span aria-hidden="true">↗</span></a>
+           target="_blank" rel="noopener noreferrer">Перейти к звонку <svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#external-link}"></use></svg></a>
         <span th:unless="${lesson.meetingUrl != null}" class="lesson-call-button is-disabled" aria-disabled="true">Ссылка на занятие не прикреплена</span>
         <form th:if="${user.role.name() == 'TEACHER'}" th:action="@{/teacher/lessons/{id}/meeting-url(id=${lesson.id})}"
               th:object="${meetingUrlForm}" method="post" class="meeting-url-form">
@@ -50,7 +50,7 @@
     </section>
 
     <section th:if="${user.role.name() == 'STUDENT' && lesson.paidBySubscription}" class="panel subscription-lesson-banner student-view">
-        <span class="subscription-mark">✓</span>
+        <span class="subscription-mark"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#check}"></use></svg></span>
         <div><p class="eyebrow">Оплата</p><h2>Оплачено абонементом</h2><p>Это занятие уже зарезервировано в вашем пакете у преподавателя.</p></div>
     </section>
 
@@ -171,13 +171,13 @@
             <div class="panel-heading"><div><p class="eyebrow">Вложения · <span th:text="${homeworkFiles.size() + '/5'}">0/5</span></p><h2>К домашнему заданию</h2><small>До 15 МБ на файл</small></div></div>
             <div th:if="${homeworkFiles.empty}" class="empty compact"><p>Файлов пока нет</p></div>
             <div th:each="file : ${homeworkFiles}" class="file-row"><span class="file-icon"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#file}"></use></svg></span><a th:href="@{/attachments/{id}(id=${file.id})}"><b th:text="${file.originalName}">file.pdf</b><small th:text="${@timeView.size(file.sizeBytes)}">1 МБ</small></a><form th:if="${user.role.name() == 'TEACHER'}" th:action="@{/teacher/attachments/{id}/delete(id=${file.id})}" method="post"><input type="hidden" name="lessonId" th:value="${lesson.id}"><button class="icon-button danger" title="Удалить" aria-label="Удалить файл"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#trash}"></use></svg></button></form></div>
-            <form th:if="${user.role.name() == 'TEACHER' && homeworkFiles.size() < 5}" th:action="@{/teacher/lessons/{id}/attachments(id=${lesson.id})}" method="post" enctype="multipart/form-data" class="upload-form" th:data-remaining="${5 - homeworkFiles.size()}"><input type="hidden" name="category" value="HOMEWORK"><label class="file-picker"><span class="file-picker-label">+ Выбрать файлы</span><input type="file" name="files" multiple required></label><button class="button secondary upload-submit" type="submit">Загрузить</button></form>
+            <form th:if="${user.role.name() == 'TEACHER' && homeworkFiles.size() < 5}" th:action="@{/teacher/lessons/{id}/attachments(id=${lesson.id})}" method="post" enctype="multipart/form-data" class="upload-form" th:data-remaining="${5 - homeworkFiles.size()}"><input type="hidden" name="category" value="HOMEWORK"><label class="file-picker"><span class="file-picker-label"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#plus}"></use></svg>Выбрать файлы</span><input type="file" name="files" multiple required></label><button class="button secondary upload-submit" type="submit">Загрузить</button></form>
         </div>
         <div class="panel attachment-panel">
             <div class="panel-heading"><div><p class="eyebrow">Вложения · <span th:text="${notesFiles.size() + '/5'}">0/5</span></p><h2>К материалам урока</h2><small>До 15 МБ на файл</small></div></div>
             <div th:if="${notesFiles.empty}" class="empty compact"><p>Файлов пока нет</p></div>
             <div th:each="file : ${notesFiles}" class="file-row"><span class="file-icon"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#file}"></use></svg></span><a th:href="@{/attachments/{id}(id=${file.id})}"><b th:text="${file.originalName}">file.pdf</b><small th:text="${@timeView.size(file.sizeBytes)}">1 МБ</small></a><form th:if="${user.role.name() == 'TEACHER'}" th:action="@{/teacher/attachments/{id}/delete(id=${file.id})}" method="post"><input type="hidden" name="lessonId" th:value="${lesson.id}"><button class="icon-button danger" title="Удалить" aria-label="Удалить файл"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#trash}"></use></svg></button></form></div>
-            <form th:if="${user.role.name() == 'TEACHER' && notesFiles.size() < 5}" th:action="@{/teacher/lessons/{id}/attachments(id=${lesson.id})}" method="post" enctype="multipart/form-data" class="upload-form" th:data-remaining="${5 - notesFiles.size()}"><input type="hidden" name="category" value="LESSON_NOTES"><label class="file-picker"><span class="file-picker-label">+ Выбрать файлы</span><input type="file" name="files" multiple required></label><button class="button secondary upload-submit" type="submit">Загрузить</button></form>
+            <form th:if="${user.role.name() == 'TEACHER' && notesFiles.size() < 5}" th:action="@{/teacher/lessons/{id}/attachments(id=${lesson.id})}" method="post" enctype="multipart/form-data" class="upload-form" th:data-remaining="${5 - notesFiles.size()}"><input type="hidden" name="category" value="LESSON_NOTES"><label class="file-picker"><span class="file-picker-label"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#plus}"></use></svg>Выбрать файлы</span><input type="file" name="files" multiple required></label><button class="button secondary upload-submit" type="submit">Загрузить</button></form>
         </div>
     </section>
     <section th:if="${user.role.name() == 'TEACHER' && lesson.status.name() != 'CANCELLED'}" class="danger-zone panel">

@@ -15,11 +15,14 @@ import java.nio.file.*;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 
 @Service
 public class LessonService {
@@ -356,6 +359,18 @@ public class LessonService {
     public List<Lesson> forMonth(User user, YearMonth month) {
         Instant from = month.atDay(1).atStartOfDay(zone).toInstant();
         Instant to = month.plusMonths(1).atDay(1).atStartOfDay(zone).toInstant();
+        return forRange(user, from, to);
+    }
+
+    @Transactional
+    public List<Lesson> forWeek(User user, LocalDate weekAnchor) {
+        LocalDate start = weekAnchor.with(java.time.temporal.TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        Instant from = start.atStartOfDay(zone).toInstant();
+        Instant to = start.plusWeeks(1).atStartOfDay(zone).toInstant();
+        return forRange(user, from, to);
+    }
+
+    private List<Lesson> forRange(User user, Instant from, Instant to) {
         materializeBetween(user, from, to.minusNanos(1));
         return user.getRole() == Role.TEACHER
                 ? lessons.findByTeacherAndStartAtBetweenOrderByStartAtAsc(user, from, to)
@@ -414,8 +429,15 @@ public class LessonService {
     }
 
     private void materializeSeries(List<LessonSeries> relevantSeries, Instant from, Instant until) {
+        if (relevantSeries.isEmpty()) return;
         final long weekSeconds = Duration.ofDays(7).toSeconds();
         List<Lesson> generated = new ArrayList<>();
+        Map<UUID, Set<Integer>> existingBySeries = new HashMap<>();
+        List<UUID> seriesIds = relevantSeries.stream().map(LessonSeries::getId).toList();
+        for (Object[] row : lessons.findOccurrenceIndexesBySeriesIds(seriesIds)) {
+            existingBySeries.computeIfAbsent((UUID) row[0], ignored -> new HashSet<>())
+                    .add(((Number) row[1]).intValue());
+        }
         for (LessonSeries series : relevantSeries) {
             if (series.getAnchorStartAt().isAfter(until)) continue;
             long secondsToFrom = Duration.between(series.getAnchorStartAt(), from).getSeconds();
@@ -425,7 +447,7 @@ public class LessonService {
             int lastIndex = (int) Math.min(Math.floorDiv(secondsToEnd, weekSeconds), 5_200);
             if (series.getCancelledFromIndex() != null) lastIndex = Math.min(lastIndex, series.getCancelledFromIndex() - 1);
             if (lastIndex < firstIndex) continue;
-            var existing = new HashSet<>(lessons.findOccurrenceIndexesBySeriesId(series.getId()));
+            Set<Integer> existing = existingBySeries.getOrDefault(series.getId(), Set.of());
             for (int index = firstIndex; index <= lastIndex; index++) {
                 if (series.includes(index) && !existing.contains(index)) generated.add(new Lesson(series, index));
             }

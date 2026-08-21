@@ -25,7 +25,7 @@ public class SecurityConfig {
                                              AdminGatewayFilter adminGatewayFilter, AdminSessionFilter adminSessionFilter,
                                              ProductActivityFilter productActivityFilter) throws Exception {
         http.authorizeHttpRequests(auth -> auth
-                .requestMatchers("/css/**", "/js/**", "/vendor/**", "/brand/**", "/fonts/**", "/login", "/register",
+                .requestMatchers("/", "/css/**", "/js/**", "/vendor/**", "/brand/**", "/fonts/**", "/login", "/register",
                         "/forgot-password", "/reset-password",
                         "/oauth2/**", "/login/oauth2/**", "/auth/vk/**",
                         "/join/**",

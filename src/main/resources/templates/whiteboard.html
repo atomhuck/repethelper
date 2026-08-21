@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#F6F7FB">
+    <meta name="theme-color" content="#F6F5F2">
     <meta name="yandex-verification" content="732d53705767dd1b">
     <meta name="_csrf" th:content="${_csrf.token}">
     <meta name="_csrf_header" th:content="${_csrf.headerName}">
     <title th:text="${boardDisplayName + ' — RepetHelper'}">Доска занятия — RepetHelper</title>
     <link rel="icon" type="image/svg+xml" th:href="@{/brand/repethelper-mark.svg}">
-    <script th:src="@{/js/theme.js(v=3)}"></script>
+    <script th:src="@{/js/theme.js(v=4)}"></script>
     <link rel="stylesheet" th:href="@{/css/whiteboard.css(v=5)}">
-    <link rel="stylesheet" th:href="@{/css/whiteboard-v2.css(v=1)}">
+    <link rel="stylesheet" th:href="@{/css/whiteboard-v2.css(v=3)}">
 </head>
-<body>
+<body class="whiteboard-page">
 <main id="whiteboard-app" class="whiteboard-app is-offline"
       th:data-board-id="${board.publicId}" th:data-lesson-id="${lesson.id}"
       th:data-board-name="${boardDisplayName}" th:data-user-role="${user.role.name()}"

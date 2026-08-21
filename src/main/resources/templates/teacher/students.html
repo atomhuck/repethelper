@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments :: head('Ученики')}"></head>
-<body>
+<body class="students-page">
 <nav th:replace="~{fragments :: topNav(${user}, 'students')}"></nav>
 <main class="page container narrow">
     <div th:if="${success}" class="alert success" th:text="${success}"></div><div th:if="${error}" class="alert error" th:text="${error}"></div>
@@ -17,7 +17,7 @@
     </section>
     <section class="panel section-panel">
         <div class="panel-heading"><div><p class="eyebrow">Активные</p><h2>Мои ученики <span class="count" th:text="${students.size()}">0</span></h2></div></div>
-        <div th:if="${students.empty}" class="empty"><span>◎</span><h3>Пока никого нет</h3><p>Передайте ученику свой код подключения.</p></div>
+        <div th:if="${students.empty}" class="empty mascot-empty"><img th:src="@{/brand/raccoon-helper.svg}" alt=""><h3>Пока никого нет</h3><p>Передайте ученику свой код подключения.</p></div>
         <div th:each="student : ${students}" class="person-row student-person-row">
             <a class="student-person-link" th:href="@{/teacher/students/{id}(id=${student.id})}">
                 <span class="avatar cyan" th:text="${#strings.substring(student.displayName,0,1)}">А</span>

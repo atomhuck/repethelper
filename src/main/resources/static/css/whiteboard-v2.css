@@ -1,35 +1,35 @@
 /* Visual shell for the whiteboard. Canvas and realtime behavior are untouched. */
 :root {
-  --bg: #f7f7f9;
+  --bg: #f6f5f2;
   --surface: #ffffff;
   --solid: #ffffff;
-  --surface-2: #f4f4f7;
-  --line: #dedfe6;
-  --line-strong: #c5c7d0;
-  --text: #191a22;
-  --muted: #696d7d;
+  --surface-2: #f1f0ec;
+  --line: #dedbd4;
+  --line-strong: #bdb9b0;
+  --text: #1d1d1b;
+  --muted: #73716a;
   --primary: #4f46e5;
   --primary-hover: #4338ca;
   --primary-soft: #efefff;
-  --canvas: #f8f8fa;
-  --canvas-dot: #d9dae1;
+  --canvas: #faf9f6;
+  --canvas-dot: #d9d6cf;
   --shadow: 0 16px 36px rgba(24, 25, 34, .12);
 }
 
 :root[data-theme="dark"] {
-  --bg: #101219;
-  --surface: #181b24;
-  --solid: #181b24;
-  --surface-2: #20242f;
-  --line: #303541;
-  --line-strong: #474e5d;
-  --text: #f5f6f8;
-  --muted: #a3a7b3;
-  --primary: #5b55d6;
-  --primary-hover: #6b65e4;
-  --primary-soft: #292846;
-  --canvas: #12151d;
-  --canvas-dot: #2c313c;
+  --bg: #151716;
+  --surface: #202320;
+  --solid: #202320;
+  --surface-2: #292c29;
+  --line: #393d38;
+  --line-strong: #575c55;
+  --text: #f6f4ef;
+  --muted: #aaa79f;
+  --primary: #7770f4;
+  --primary-hover: #8983ff;
+  --primary-soft: #302e53;
+  --canvas: #171a18;
+  --canvas-dot: #343833;
   --shadow: 0 18px 42px rgba(0, 0, 0, .32);
 }
 

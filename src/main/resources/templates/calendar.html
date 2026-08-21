@@ -1,37 +1,114 @@
 <!doctype html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <body>
-<section th:fragment="calendarPanel(calendar, viewer)"
-         class="panel calendar-panel"
-         th:attr="data-calendar-endpoint=${viewer == 'teacher' ? '/teacher/calendar' : '/student/calendar'}"
+<section th:fragment="calendarWorkspace"
+         class="calendar-workspace"
+         th:classappend="${calendarMode.name() == 'MONTH'} ? ' is-month' : ' is-week'"
+         th:attr="data-calendar-endpoint=${viewer == 'teacher' ? '/teacher/calendar' : '/student/calendar'},data-calendar-mode=${calendarMode.queryValue()}"
          aria-live="polite">
-    <div class="panel-heading">
-        <div><p class="eyebrow">Расписание</p><h2 th:text="${calendar.title}">Июль 2026</h2></div>
-        <div class="calendar-nav" aria-label="Навигация по месяцам">
-            <a th:href="${viewer == 'teacher'} ? @{/teacher(year=${calendar.previousYear},month=${calendar.previousMonth})} : @{/student(year=${calendar.previousYear},month=${calendar.previousMonth})}"
-               th:data-calendar-fragment-url="${viewer == 'teacher'} ? @{/teacher/calendar(year=${calendar.previousYear},month=${calendar.previousMonth})} : @{/student/calendar(year=${calendar.previousYear},month=${calendar.previousMonth})}"
-               data-calendar-link data-calendar-action="previous" aria-label="Предыдущий месяц"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#arrow-left}"></use></svg></a>
-            <a th:href="${viewer == 'teacher'} ? @{/teacher} : @{/student}"
-               th:data-calendar-fragment-url="${viewer == 'teacher'} ? @{/teacher/calendar} : @{/student/calendar}"
-               data-calendar-link data-calendar-action="today">Сегодня</a>
-            <a th:href="${viewer == 'teacher'} ? @{/teacher(year=${calendar.nextYear},month=${calendar.nextMonth})} : @{/student(year=${calendar.nextYear},month=${calendar.nextMonth})}"
-               th:data-calendar-fragment-url="${viewer == 'teacher'} ? @{/teacher/calendar(year=${calendar.nextYear},month=${calendar.nextMonth})} : @{/student/calendar(year=${calendar.nextYear},month=${calendar.nextMonth})}"
-               data-calendar-link data-calendar-action="next" aria-label="Следующий месяц"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#arrow-right}"></use></svg></a>
+    <header class="calendar-workspace-head">
+        <div>
+            <p class="section-kicker">Расписание</p>
+            <h2 th:text="${calendarMode.name() == 'MONTH' ? calendar.title : weekCalendar.title}">Август 2026</h2>
         </div>
-    </div>
-    <div class="calendar weekdays"><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span></div>
-    <div class="calendar days">
-        <div th:each="day : ${calendar.days}" class="calendar-day"
-             th:classappend="${(!day.currentMonth ? ' muted' : (day.today ? ' today' : '')) + (day.hasUpcomingScheduledLessons ? ' has-lessons' : '') + (day.hasPastLessons ? ' past-lessons' : '')}">
-            <span class="day-number" th:text="${day.date.dayOfMonth}">1</span>
-            <a th:each="lesson : ${day.lessons}" th:href="@{/lessons/{id}(id=${lesson.id})}" class="calendar-event"
-               th:classappend="${lesson.status.name() == 'CANCELLED' ? 'cancelled' : (day.past(lesson) ? 'past' : '')}">
-                <b th:text="${@timeView.time(lesson.startAt)}">17:00</b>
-                <span th:text="${lesson.status.name() == 'CANCELLED' ? 'Отменено' : (viewer == 'teacher' ? lesson.student.displayName : lesson.teacher.displayName)}">Ученик</span>
+        <div class="calendar-head-actions">
+            <div class="segmented-control calendar-mode-switch" aria-label="Вид календаря">
+                <a th:href="${viewer == 'teacher'} ? @{/teacher(view='week',date=${weekCalendar.selectedDate})} : @{/student(view='week',date=${weekCalendar.selectedDate})}"
+                   th:data-calendar-fragment-url="${viewer == 'teacher'} ? @{/teacher/calendar(view='week',date=${weekCalendar.selectedDate})} : @{/student/calendar(view='week',date=${weekCalendar.selectedDate})}"
+                   data-calendar-link data-calendar-action="week"
+                   th:classappend="${calendarMode.name() == 'WEEK'} ? ' active'"
+                   th:attr="aria-pressed=${calendarMode.name() == 'WEEK'}">Неделя</a>
+                <a th:href="${viewer == 'teacher'} ? @{/teacher(view='month',year=${calendar.month.year},month=${calendar.month.monthValue},date=${selectedDate})} : @{/student(view='month',year=${calendar.month.year},month=${calendar.month.monthValue},date=${selectedDate})}"
+                   th:data-calendar-fragment-url="${viewer == 'teacher'} ? @{/teacher/calendar(view='month',year=${calendar.month.year},month=${calendar.month.monthValue},date=${selectedDate})} : @{/student/calendar(view='month',year=${calendar.month.year},month=${calendar.month.monthValue},date=${selectedDate})}"
+                   data-calendar-link data-calendar-action="month"
+                   th:classappend="${calendarMode.name() == 'MONTH'} ? ' active'"
+                   th:attr="aria-pressed=${calendarMode.name() == 'MONTH'}">Месяц</a>
+            </div>
+            <nav class="calendar-nav" aria-label="Навигация по календарю" th:if="${calendarMode.name() == 'WEEK'}">
+                <a th:href="${viewer == 'teacher'} ? @{/teacher(view='week',date=${weekCalendar.previousStart})} : @{/student(view='week',date=${weekCalendar.previousStart})}"
+                   th:data-calendar-fragment-url="${viewer == 'teacher'} ? @{/teacher/calendar(view='week',date=${weekCalendar.previousStart})} : @{/student/calendar(view='week',date=${weekCalendar.previousStart})}"
+                   data-calendar-link data-calendar-action="previous" aria-label="Предыдущая неделя"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#arrow-left}"></use></svg></a>
+                <a th:href="${viewer == 'teacher'} ? @{/teacher(view='week')} : @{/student(view='week')}"
+                   th:data-calendar-fragment-url="${viewer == 'teacher'} ? @{/teacher/calendar(view='week')} : @{/student/calendar(view='week')}"
+                   data-calendar-link data-calendar-action="today">Сегодня</a>
+                <a th:href="${viewer == 'teacher'} ? @{/teacher(view='week',date=${weekCalendar.nextStart})} : @{/student(view='week',date=${weekCalendar.nextStart})}"
+                   th:data-calendar-fragment-url="${viewer == 'teacher'} ? @{/teacher/calendar(view='week',date=${weekCalendar.nextStart})} : @{/student/calendar(view='week',date=${weekCalendar.nextStart})}"
+                   data-calendar-link data-calendar-action="next" aria-label="Следующая неделя"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#arrow-right}"></use></svg></a>
+            </nav>
+            <nav class="calendar-nav" aria-label="Навигация по календарю" th:if="${calendarMode.name() == 'MONTH'}">
+                <a th:href="${viewer == 'teacher'} ? @{/teacher(view='month',year=${calendar.previousYear},month=${calendar.previousMonth})} : @{/student(view='month',year=${calendar.previousYear},month=${calendar.previousMonth})}"
+                   th:data-calendar-fragment-url="${viewer == 'teacher'} ? @{/teacher/calendar(view='month',year=${calendar.previousYear},month=${calendar.previousMonth})} : @{/student/calendar(view='month',year=${calendar.previousYear},month=${calendar.previousMonth})}"
+                   data-calendar-link data-calendar-action="previous" aria-label="Предыдущий месяц"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#arrow-left}"></use></svg></a>
+                <a th:href="${viewer == 'teacher'} ? @{/teacher(view='month')} : @{/student(view='month')}"
+                   th:data-calendar-fragment-url="${viewer == 'teacher'} ? @{/teacher/calendar(view='month')} : @{/student/calendar(view='month')}"
+                   data-calendar-link data-calendar-action="today">Сегодня</a>
+                <a th:href="${viewer == 'teacher'} ? @{/teacher(view='month',year=${calendar.nextYear},month=${calendar.nextMonth})} : @{/student(view='month',year=${calendar.nextYear},month=${calendar.nextMonth})}"
+                   th:data-calendar-fragment-url="${viewer == 'teacher'} ? @{/teacher/calendar(view='month',year=${calendar.nextYear},month=${calendar.nextMonth})} : @{/student/calendar(view='month',year=${calendar.nextYear},month=${calendar.nextMonth})}"
+                   data-calendar-link data-calendar-action="next" aria-label="Следующий месяц"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#arrow-right}"></use></svg></a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="week-calendar" th:if="${calendarMode.name() == 'WEEK'}"
+         th:style="${'--week-start-hour:' + weekCalendar.startHour + ';--week-end-hour:' + weekCalendar.endHour}">
+        <div class="week-header-spacer"></div>
+        <a th:each="day : ${weekCalendar.days}" class="week-day-head"
+           th:classappend="${(day.today ? ' today' : '') + (day.date.equals(weekCalendar.selectedDate) ? ' selected' : '')}"
+           th:href="${viewer == 'teacher'} ? @{/teacher(view='week',date=${day.date})} : @{/student(view='week',date=${day.date})}"
+           th:data-calendar-fragment-url="${viewer == 'teacher'} ? @{/teacher/calendar(view='week',date=${day.date})} : @{/student/calendar(view='week',date=${day.date})}"
+           data-calendar-link data-calendar-action="day">
+            <span th:text="${@timeView.weekDayShort(day.date)}">пн</span>
+            <strong th:text="${day.date.dayOfMonth}">17</strong>
+        </a>
+        <div class="week-time-axis">
+            <span th:each="hour : ${#numbers.sequence(weekCalendar.startHour, weekCalendar.endHour - 1)}"
+                  th:text="${#numbers.formatInteger(hour, 2) + ':00'}">08:00</span>
+        </div>
+        <div th:each="day : ${weekCalendar.days}" class="week-day-column" th:classappend="${day.today ? ' today' : ''}">
+            <span th:each="hour : ${#numbers.sequence(weekCalendar.startHour, weekCalendar.endHour - 1)}" class="week-hour-line"></span>
+            <a th:each="item : ${day.lessons}" class="week-lesson"
+               th:classappend="${item.lesson.status.name() == 'CANCELLED' ? ' cancelled' : (item.current ? ' current' : (item.past ? ' past' : ''))}"
+               th:href="@{/lessons/{id}(id=${item.lesson.id})}"
+               th:style="${'--lesson-start:' + item.startMinute + ';--lesson-duration:' + item.durationMinutes + ';--lesson-column:' + item.column + ';--lesson-columns:' + item.columns}">
+                <time th:text="${@timeView.time(item.lesson.startAt)}">09:00</time>
+                <strong th:text="${viewer == 'teacher' ? item.lesson.student.displayName : item.lesson.teacher.displayName}">Ученик</strong>
+                <small th:text="${item.lesson.status.name() == 'CANCELLED' ? 'Отменено' : item.lesson.durationMinutes + ' мин'}">60 мин</small>
             </a>
         </div>
     </div>
+
+    <section class="panel calendar-panel month-calendar" th:if="${calendarMode.name() == 'MONTH'}">
+        <div class="calendar weekdays"><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span></div>
+        <div class="calendar days">
+            <div th:each="day : ${calendar.days}" class="calendar-day"
+                 th:classappend="${(!day.currentMonth ? ' muted' : (day.today ? ' today' : '')) + (day.date.equals(selectedDate) ? ' selected' : '') + (day.hasUpcomingScheduledLessons ? ' has-lessons' : '') + (day.hasPastLessons ? ' past-lessons' : '')}">
+                <a class="day-number" data-calendar-link data-calendar-action="day"
+                   th:href="${viewer == 'teacher'} ? @{/teacher(view='month',year=${day.date.year},month=${day.date.monthValue},date=${day.date})} : @{/student(view='month',year=${day.date.year},month=${day.date.monthValue},date=${day.date})}"
+                   th:data-calendar-fragment-url="${viewer == 'teacher'} ? @{/teacher/calendar(view='month',year=${day.date.year},month=${day.date.monthValue},date=${day.date})} : @{/student/calendar(view='month',year=${day.date.year},month=${day.date.monthValue},date=${day.date})}"
+                   th:attr="aria-label=${day.date}" th:text="${day.date.dayOfMonth}">1</a>
+                <a th:each="lesson : ${day.lessons}" th:href="@{/lessons/{id}(id=${lesson.id})}" class="calendar-event"
+                   th:classappend="${lesson.status.name() == 'CANCELLED' ? 'cancelled' : (day.past(lesson) ? 'past' : '')}">
+                    <b th:text="${@timeView.time(lesson.startAt)}">17:00</b>
+                    <span th:text="${lesson.status.name() == 'CANCELLED' ? 'Отменено' : (viewer == 'teacher' ? lesson.student.displayName : lesson.teacher.displayName)}">Ученик</span>
+                </a>
+            </div>
+        </div>
+    </section>
+    <template th:if="${viewer == 'teacher'}" data-calendar-agenda-template>
+        <th:block th:replace="~{calendar :: dayAgenda}"></th:block>
+    </template>
     <p class="sr-only" data-calendar-status aria-live="polite"></p>
 </section>
+
+<th:block th:fragment="dayAgenda">
+    <div class="panel-heading"><div><p class="eyebrow">Выбранный день</p><h2 th:text="${@timeView.dayTitle(selectedDate)}">Пятница, 21 августа</h2></div></div>
+    <div th:if="${selectedDayLessons.empty}" class="empty compact"><p>На этот день занятий нет</p></div>
+    <a th:each="lesson : ${selectedDayLessons}" th:href="@{/lessons/{id}(id=${lesson.id})}" class="upcoming-item"
+       th:classappend="${lesson.status.name() == 'CANCELLED' ? ' cancelled' : ''}">
+        <div class="date-chip"><strong th:text="${@timeView.time(lesson.startAt)}">17:00</strong><small th:text="${lesson.durationMinutes + ' мин'}">60 мин</small></div>
+        <div><b th:text="${lesson.student.displayName}">Ученик</b><span th:text="${lesson.status.name() == 'CANCELLED' ? 'Отменено' : 'Запланировано'}">Запланировано</span></div>
+        <svg class="arrow ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#arrow-right}"></use></svg>
+    </a>
+</th:block>
 </body>
 </html>

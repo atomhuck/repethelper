@@ -4,14 +4,11 @@
 <body class="auth-page">
 <main class="auth-shell">
     <section class="auth-copy">
-        <a class="brand large" href="/login"><img class="brand-logo" th:src="@{/brand/repethelper-mark.svg}" alt=""><span>RepetHelper</span></a>
+        <a class="brand large" href="/"><img class="brand-logo" th:src="@{/brand/repethelper-mark.svg}" alt=""><span>RepetHelper</span></a>
         <p class="eyebrow">Личный кабинет</p>
         <h1>Учёба без потерянных файлов и забытых дедлайнов.</h1>
         <p class="lead">Расписание, домашние задания и материалы уроков — в одном спокойном пространстве.</p>
-        <div class="auth-feature-card" aria-hidden="true">
-            <span class="auth-feature-icon"><svg class="ui-icon"><use th:href="@{/brand/ui-icons.svg#calendar}"></use></svg></span>
-            <div><b>Всё для занятия рядом</b><span>Расписание, материалы и совместная доска всегда под рукой.</span></div>
-        </div>
+        <img class="auth-mascot" th:src="@{/brand/raccoon-helper.svg}" alt="" aria-hidden="true">
     </section>
     <section class="auth-card">
         <div><p class="eyebrow">С возвращением</p><h2>Войти в аккаунт</h2></div>
@@ -30,7 +27,7 @@
         </a>
         <p th:if="${vkEnabled}" class="auth-divider"><span>или</span></p>
         <form th:action="@{/login}" method="post" class="stack-form">
-            <label>Email<input type="email" name="email" autocomplete="email" required autofocus placeholder="name@example.ru"></label>
+            <label>Email<input type="email" name="email" autocomplete="email" required placeholder="name@example.ru"></label>
             <label>Пароль<input type="password" name="password" autocomplete="current-password" required placeholder="••••••••"></label>
             <a class="form-link" th:href="@{/forgot-password}">Забыли пароль?</a>
             <button class="button primary full" type="submit">Войти <svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#arrow-right}"></use></svg></button>

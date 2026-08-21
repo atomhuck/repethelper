@@ -1,12 +1,12 @@
 <!doctype html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments :: head('Кабинет преподавателя')}"></head>
-<body>
+<body class="teacher-workspace-page">
 <nav th:replace="~{fragments :: topNav(${user}, 'dashboard')}"></nav>
 <main class="page container">
     <div th:if="${success}" class="alert success" th:text="${success}"></div>
     <div th:if="${error}" class="alert error" th:text="${error}"></div>
-    <header class="page-header">
+    <header class="page-header workspace-hero">
         <div><p class="eyebrow">Панель преподавателя</p><h1>Добрый день, <span th:text="${user.displayName}">Преподаватель</span></h1><p>Планируйте занятия и держите материалы в порядке.</p></div>
         <details id="new-lesson" class="popover" th:attr="open=${selectedStudentId != null ? 'open' : null}"><summary class="button primary"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#plus}"></use></svg>Назначить занятие</summary>
             <form th:action="@{/teacher/lessons}" th:object="${lessonForm}" method="post" class="panel popover-panel stack-form new-lesson-form">
@@ -49,14 +49,29 @@
         </details>
     </header>
 
-    <section class="stats-grid">
+    <section class="stats-grid workspace-summary" aria-label="Сводка преподавателя">
         <a class="stat panel" th:href="@{/teacher/students}"><span class="stat-icon cyan"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#users}"></use></svg></span><div><strong th:text="${students.size()}">0</strong><small>учеников</small></div><svg class="arrow ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#arrow-right}"></use></svg></a>
         <a class="stat panel" href="#upcoming"><span class="stat-icon green"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#calendar}"></use></svg></span><div><strong th:text="${upcoming.size()}">0</strong><small>ближайших занятий</small></div><svg class="arrow ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#arrow-right}"></use></svg></a>
         <a class="stat panel" th:href="@{/teacher/students}"><span class="stat-icon violet"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#mail}"></use></svg></span><div><strong th:text="${pending.size()}">0</strong><small>новых запросов</small></div><svg class="arrow ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#arrow-right}"></use></svg></a>
     </section>
 
-    <section class="dashboard-grid">
-        <div th:replace="~{calendar :: calendarPanel(${calendar}, 'teacher')}">
+    <section class="dashboard-grid workspace-schedule">
+        <aside class="schedule-rail" aria-label="Быстрый обзор месяца">
+            <div class="schedule-rail-head"><span>Месяц</span><strong th:text="${calendar.title}">Август 2026</strong></div>
+            <div class="mini-weekdays" aria-hidden="true"><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span></div>
+            <div class="mini-month">
+                <a th:each="day : ${calendar.days}"
+                   th:href="@{/teacher(view='week',date=${day.date})}"
+                   th:classappend="${(!day.currentMonth ? ' muted' : '') + (day.today ? ' today' : '') + (day.hasUpcomingScheduledLessons ? ' busy' : '')}"
+                   th:attr="aria-label=${day.date}">
+                    <span th:text="${day.date.dayOfMonth}">1</span>
+                </a>
+            </div>
+            <div class="schedule-rail-key">
+                <span><i class="future"></i>Будущие</span><span><i class="past"></i>Прошедшие</span><span><i class="cancelled"></i>Отменённые</span>
+            </div>
+        </aside>
+        <div th:replace="~{calendar :: calendarWorkspace}">
             <div class="panel-heading">
                 <div><p class="eyebrow">Расписание</p><h2 th:text="${calendar.title}">Июль 2026</h2></div>
                 <div class="calendar-nav"><a th:href="@{/teacher(year=${calendar.previousYear},month=${calendar.previousMonth})}" aria-label="Предыдущий месяц"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#arrow-left}"></use></svg></a><a th:href="@{/teacher}">Сегодня</a><a th:href="@{/teacher(year=${calendar.nextYear},month=${calendar.nextMonth})}" aria-label="Следующий месяц"><svg class="ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#arrow-right}"></use></svg></a></div>
@@ -71,18 +86,12 @@
                 </div>
             </div>
         </div>
-        <aside class="panel side-panel" id="upcoming">
-            <div class="panel-heading"><div><p class="eyebrow">На очереди</p><h2>Ближайшие</h2></div></div>
-            <div th:if="${upcoming.empty}" class="empty compact"><p>Пока занятий нет</p></div>
-            <a th:each="lesson : ${upcomingPreview}" th:href="@{/lessons/{id}(id=${lesson.id})}" class="upcoming-item">
-                <div class="date-chip"><strong th:text="${@timeView.day(lesson.startAt)}">24</strong><small th:text="${@timeView.monthShort(lesson.startAt)}">июл</small></div>
-                <div><b th:text="${lesson.student.displayName}">Ученик</b><span th:text="${@timeView.time(lesson.startAt) + ' · ' + lesson.durationMinutes + ' мин'}">17:00 · 60 мин</span></div><svg class="arrow ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#arrow-right}"></use></svg>
-            </a>
-            <a th:if="${upcoming.size() > 4}" class="button secondary upcoming-more" th:href="@{/teacher/upcoming}">Посмотреть все занятия</a>
+        <aside class="panel side-panel workspace-agenda" id="upcoming" data-calendar-agenda>
+            <th:block th:replace="~{calendar :: dayAgenda}"></th:block>
         </aside>
     </section>
 
-    <section class="panel code-panel">
+    <section class="panel code-panel workspace-invite">
         <div><p class="eyebrow">Код подключения</p><h2>Ваш код: <code th:text="${profile.inviteCode}">teacher_code</code></h2><p>Сообщите его ученику — новый запрос появится в разделе «Ученики».</p></div>
         <div class="code-actions"><button class="button secondary copy-invite-code" type="button" th:data-value="${profile.inviteCode}">Скопировать код</button>
         <button class="button secondary copy-invite-link" type="button" th:data-value="${inviteUrl}">Скопировать ссылку</button>

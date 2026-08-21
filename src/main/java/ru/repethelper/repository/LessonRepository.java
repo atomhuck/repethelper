@@ -69,8 +69,8 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
     @EntityGraph(attributePaths = {"student", "teacher"})
     Optional<Lesson> findFirstByTeacherAndStudentAndPriceRublesIsNotNullOrderByStartAtDescIdDesc(User teacher, User student);
 
-    @Query("select l.occurrenceIndex from Lesson l where l.series.id = :seriesId")
-    Set<Integer> findOccurrenceIndexesBySeriesId(UUID seriesId);
+    @Query("select l.series.id, l.occurrenceIndex from Lesson l where l.series.id in :seriesIds")
+    List<Object[]> findOccurrenceIndexesBySeriesIds(Collection<UUID> seriesIds);
 
     @EntityGraph(attributePaths = {"student", "teacher"})
     List<Lesson> findByStatusAndStartAtAfterAndStartAtLessThanEqualOrderByStartAtAsc(

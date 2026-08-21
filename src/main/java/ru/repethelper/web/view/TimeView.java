@@ -28,6 +28,13 @@ public class TimeView {
         return value.substring(0, 1).toUpperCase(RU) + value.substring(1);
     }
     public String monthShort(YearMonth month) { return DateTimeFormatter.ofPattern("LLL", RU).format(month); }
+    public String weekDayShort(LocalDate date) { return DateTimeFormatter.ofPattern("EE", RU).format(date); }
+    public String dayMonth(LocalDate date) { return DateTimeFormatter.ofPattern("d MMMM", RU).format(date); }
+    public String dayTitle(LocalDate date) {
+        String value = DateTimeFormatter.ofPattern("EEEE, d MMMM", RU).format(date);
+        return value.substring(0, 1).toUpperCase(RU) + value.substring(1);
+    }
+    public String isoDate(LocalDate date) { return DateTimeFormatter.ISO_LOCAL_DATE.format(date); }
     public String date(Instant value) { return DateTimeFormatter.ofPattern("d MMMM yyyy", RU).format(value.atZone(zone)); }
     public String lessonsCount(long count) {
         long mod100 = Math.abs(count) % 100;
