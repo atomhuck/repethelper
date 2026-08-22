@@ -70,7 +70,7 @@ public class TeacherController {
         model.addAttribute("upcoming", upcoming);
         model.addAttribute("upcomingPreview", upcoming.stream().limit(4).toList());
         List<Lesson> visibleLessons = addCalendarModels(model, teacher, selected, selectedDate, calendarMode);
-        addSelectedDay(model, visibleLessons, selectedDate);
+        addSelectedDay(model, teacher, visibleLessons, selectedDate);
         return "teacher/dashboard";
     }
 
@@ -87,7 +87,7 @@ public class TeacherController {
         CalendarMode calendarMode = calendarMode(view, year, month);
         response.setHeader("Cache-Control", "no-store");
         List<Lesson> visibleLessons = addCalendarModels(model, teacher, selected, selectedDate, calendarMode);
-        addSelectedDay(model, visibleLessons, selectedDate);
+        addSelectedDay(model, teacher, visibleLessons, selectedDate);
         model.addAttribute("viewer", "teacher");
         return "calendar :: calendarWorkspace";
     }
@@ -221,10 +221,15 @@ public class TeacherController {
         model.addAttribute("selectedDate", date);
         return mode == CalendarMode.WEEK ? weekLessons : monthLessons;
     }
-    private void addSelectedDay(Model model, List<Lesson> visibleLessons, LocalDate date) {
-        model.addAttribute("selectedDayLessons", visibleLessons.stream()
+    private void addSelectedDay(Model model, User teacher, List<Lesson> visibleLessons, LocalDate date) {
+        List<Lesson> selectedLessons = visibleLessons.stream()
                 .filter(lesson -> lesson.getStartAt().atZone(lessons.zone()).toLocalDate().equals(date))
-                .toList());
+                .toList();
+        model.addAttribute("selectedDayLessons", selectedLessons);
+        model.addAttribute("nearestUpcomingLesson", null);
+        if (selectedLessons.isEmpty() && date.equals(LocalDate.now(lessons.zone()))) {
+            model.addAttribute("nearestUpcomingLesson", lessons.upcoming(teacher).stream().findFirst().orElse(null));
+        }
     }
     private String error(RedirectAttributes flash, String message, String target) { flash.addFlashAttribute("error", message); return "redirect:" + target; }
 }

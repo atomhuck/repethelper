@@ -51,7 +51,8 @@ public class StudentController {
         var history = lessons.history(student);
         model.addAttribute("history", history);
         model.addAttribute("progress", progress.forStudent(student, history));
-        addCalendarModels(model, student, selected, selectedDate, calendarMode);
+        List<Lesson> visibleLessons = addCalendarModels(model, student, selected, selectedDate, calendarMode);
+        addSelectedDay(model, student, visibleLessons, selectedDate);
         model.addAttribute("subscriptionSummaries", subscriptions.summariesForStudent(student));
         return "student/dashboard";
     }
@@ -68,7 +69,8 @@ public class StudentController {
         YearMonth selected = requestedMonth == null ? YearMonth.from(selectedDate) : requestedMonth;
         CalendarMode calendarMode = calendarMode(view, year, month);
         response.setHeader("Cache-Control", "no-store");
-        addCalendarModels(model, student, selected, selectedDate, calendarMode);
+        List<Lesson> visibleLessons = addCalendarModels(model, student, selected, selectedDate, calendarMode);
+        addSelectedDay(model, student, visibleLessons, selectedDate);
         model.addAttribute("viewer", "student");
         return "calendar :: calendarWorkspace";
     }
@@ -118,12 +120,23 @@ public class StudentController {
         try { return LocalDate.parse(value); }
         catch (DateTimeException ex) { return fallbackMonth == null ? LocalDate.now(lessons.zone()) : fallbackMonth.atDay(1); }
     }
-    private void addCalendarModels(Model model, User user, YearMonth month, LocalDate date, CalendarMode mode) {
+    private List<Lesson> addCalendarModels(Model model, User user, YearMonth month, LocalDate date, CalendarMode mode) {
         var monthLessons = lessons.forMonth(user, month);
         List<Lesson> weekLessons = mode == CalendarMode.WEEK ? lessons.forWeek(user, date) : List.of();
         model.addAttribute("calendar", calendars.build(month, monthLessons));
         model.addAttribute("weekCalendar", calendars.buildWeek(date, weekLessons));
         model.addAttribute("calendarMode", mode);
         model.addAttribute("selectedDate", date);
+        return mode == CalendarMode.WEEK ? weekLessons : monthLessons;
+    }
+    private void addSelectedDay(Model model, User student, List<Lesson> visibleLessons, LocalDate date) {
+        List<Lesson> selectedLessons = visibleLessons.stream()
+                .filter(lesson -> lesson.getStartAt().atZone(lessons.zone()).toLocalDate().equals(date))
+                .toList();
+        model.addAttribute("selectedDayLessons", selectedLessons);
+        model.addAttribute("nearestUpcomingLesson", null);
+        if (selectedLessons.isEmpty() && date.equals(LocalDate.now(lessons.zone()))) {
+            model.addAttribute("nearestUpcomingLesson", lessons.upcoming(student).stream().findFirst().orElse(null));
+        }
     }
 }

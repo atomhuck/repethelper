@@ -95,14 +95,18 @@
     if (menu.open) menus().filter(other => other !== menu).forEach(closeMenu);
   }, true);
 
-  document.addEventListener("pointerdown", event => {
+  const closeTransientPopovers = event => {
     menus().forEach(menu => {
       if (!menu.contains(event.target)) closeMenu(menu);
     });
     document.querySelectorAll("details.popover[open]").forEach(popover => {
       if (!popover.contains(event.target)) popover.removeAttribute("open");
     });
-  });
+  };
+  document.addEventListener("pointerdown", closeTransientPopovers);
+  // Keyboard and some mobile browsers can dispatch a click without a usable pointer event.
+  // Keep the same outside-click behaviour for both paths.
+  document.addEventListener("click", closeTransientPopovers, true);
 
   document.addEventListener("keydown", event => {
     if (event.key !== "Escape") return;
@@ -122,6 +126,12 @@
   });
 
   document.addEventListener("click", event => {
+    const calendarDay = event.target.closest(".month-calendar .calendar-day");
+    if (calendarDay && !event.target.closest("a, button, input, select, textarea, label")) {
+      calendarDay.querySelector('.day-number[data-calendar-action="day"]')?.click();
+      return;
+    }
+
     const opener = event.target.closest("[data-dialog-open]");
     if (opener) {
       const dialog = document.getElementById(opener.dataset.dialogOpen);
@@ -226,4 +236,6 @@
       }
     } catch (_) { /* Direct opening uses the safe href fallback. */ }
   });
+
+  document.documentElement.dataset.uiReady = "true";
 })();

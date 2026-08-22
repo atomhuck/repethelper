@@ -34,6 +34,7 @@ public class TimeView {
         String value = DateTimeFormatter.ofPattern("EEEE, d MMMM", RU).format(date);
         return value.substring(0, 1).toUpperCase(RU) + value.substring(1);
     }
+    public String dayTitle(Instant value) { return dayTitle(value.atZone(zone).toLocalDate()); }
     public String isoDate(LocalDate date) { return DateTimeFormatter.ISO_LOCAL_DATE.format(date); }
     public String date(Instant value) { return DateTimeFormatter.ofPattern("d MMMM yyyy", RU).format(value.atZone(zone)); }
     public String lessonsCount(long count) {

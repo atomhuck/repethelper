@@ -94,7 +94,7 @@
             </div>
         </div>
     </section>
-    <template th:if="${viewer == 'teacher'}" data-calendar-agenda-template>
+    <template data-calendar-agenda-template>
         <th:block th:replace="~{calendar :: dayAgenda}"></th:block>
     </template>
     <p class="sr-only" data-calendar-status aria-live="polite"></p>
@@ -102,11 +102,19 @@
 
 <th:block th:fragment="dayAgenda">
     <div class="panel-heading"><div><p class="eyebrow">Выбранный день</p><h2 th:text="${@timeView.dayTitle(selectedDate)}">Пятница, 21 августа</h2></div></div>
-    <div th:if="${selectedDayLessons.empty}" class="empty compact"><p>На этот день занятий нет</p></div>
+    <div th:if="${selectedDayLessons.empty and nearestUpcomingLesson == null}" class="empty compact"><p>На этот день занятий нет</p></div>
+    <div th:if="${selectedDayLessons.empty and nearestUpcomingLesson != null}" class="calendar-nearest">
+        <p class="eyebrow">Ближайшее занятие</p>
+        <a th:href="@{/lessons/{id}(id=${nearestUpcomingLesson.id})}" class="upcoming-item">
+            <div class="date-chip"><strong th:text="${@timeView.time(nearestUpcomingLesson.startAt)}">17:00</strong><small th:text="${nearestUpcomingLesson.durationMinutes + ' мин'}">60 мин</small></div>
+            <div><b th:text="${viewer == 'teacher' ? nearestUpcomingLesson.student.displayName : nearestUpcomingLesson.teacher.displayName}">Ученик</b><span th:text="${@timeView.dayTitle(nearestUpcomingLesson.startAt)}">Пятница, 21 августа</span></div>
+            <svg class="arrow ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#arrow-right}"></use></svg>
+        </a>
+    </div>
     <a th:each="lesson : ${selectedDayLessons}" th:href="@{/lessons/{id}(id=${lesson.id})}" class="upcoming-item"
        th:classappend="${lesson.status.name() == 'CANCELLED' ? ' cancelled' : ''}">
         <div class="date-chip"><strong th:text="${@timeView.time(lesson.startAt)}">17:00</strong><small th:text="${lesson.durationMinutes + ' мин'}">60 мин</small></div>
-        <div><b th:text="${lesson.student.displayName}">Ученик</b><span th:text="${lesson.status.name() == 'CANCELLED' ? 'Отменено' : 'Запланировано'}">Запланировано</span></div>
+        <div><b th:text="${viewer == 'teacher' ? lesson.student.displayName : lesson.teacher.displayName}">Ученик</b><span th:text="${lesson.status.name() == 'CANCELLED' ? 'Отменено' : 'Запланировано'}">Запланировано</span></div>
         <svg class="arrow ui-icon" aria-hidden="true"><use th:href="@{/brand/ui-icons.svg#arrow-right}"></use></svg>
     </a>
 </th:block>
